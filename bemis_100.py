@@ -2,11 +2,10 @@
 from __future__ import division
 
 import bemis_100_pattern as bp
-import numpy as np
 import serial
-import time, sys
+import time, sys, os
 from optparse import OptionParser
-import sys, os, pygame
+import pygame
 from pygame.locals import *
 
 
@@ -44,13 +43,11 @@ class Bemis100:
             if (num_times > 0 and count == num_times):
                 break
             
-            for row in pattern.image_data:
+            for row in pattern:
                 row_start = time.time()
+                                
                 self.port.write('B')
-                for triplet in row:
-                    for pixel in triplet:
-                        i += 1
-                        self.port.write(chr(int(pixel)))
+                self.port.write(row)
                 
                 dt = time.time() - row_start
                 if (self.frame_dt - dt) > 0:
@@ -81,15 +78,18 @@ class SimBemis100(Bemis100):
         self.pixels = [pygame.Rect(i*pixelWidth,0,pixelWidth,pixelHeight) for i\
                 in range(self.num_pixels)]
 
-    def write(self,char):
-        if char == 'B':
+    def write(self, b):
+        if b == 'B' or b == ord('B') :
             self.index = 0
             self.draw()
         else:
-            self.frame[self.index] = decode_char(char)
+            self.frame[self.index] = decode_char(b)
             self.index += 1
+
+    def blank(self):
+        pass
     
-    def draw(self, pattern):
+    def draw(self):
         for i in range(0,len(self.frame),3):
             color=pygame.Color(self.frame[i],self.frame[i+1],self.frame[i+2],1)
             pygame.draw.rect(self.screen,color,  self.pixels[int(i/3)])
@@ -100,14 +100,18 @@ class SimPort:
     allow transparent interface with the normal Bemis100 code.'''
     def __init__(self,sb):
         self.sb = sb
-    def write(self,string):
-        for char in string:
-            self.sb.write(char)
+    
+    def write(self, data):
+        try:
+            for b in data:
+                self.sb.write(b)
+        except TypeError:   # Not iterable
+            self.sb.write(data)
 
-def decode_char(char):
+def decode_char(x):
     '''Undo the conversion from char values to bytes, in which the value is
     indicated by the number of 1s in the byte'''
-    return int(bin(ord(char)).count('1') * 255/8)
+    return int(bin(x).count('1') * 255/8)
 
 if __name__ == '__main__':
     p = OptionParser("Usage: python %prog [pattern | pattern_dir] [options]")
@@ -142,30 +146,30 @@ if __name__ == '__main__':
     if os.path.isfile(args[0]):
         patterns.append(args[0])
     elif os.path.isdir(args[0]):
-        patterns.extend(os.listdir(args[0]))
+        patterns.extend([os.path.join(args[0], fn) for fn in os.listdir(args[0])])
     else:
         print "Not a pattern file or directory: %s\n\n" % args[0]
         p.print_help()
         sys.exit(1)
         
     if not options.sim:
-        b = Bemis100(pattern, options.device, options.num_boards, options.framerate)
+        b = Bemis100(options.device, options.num_boards, options.framerate)
     else:
-        b = SimBemis100(pattern, options.device, options.num_boards, options.framerate)
+        b = SimBemis100(options.device, options.num_boards, options.framerate)
         
     print "Opening port...",
     b.open_port()
     
     print "done\nLooping...",
     sys.stdout.flush()
-	
-	while True:
-		for fn in patterns:
-		    pattern = bp.Bemis100Pattern(os.path.join(args[0],fn), options.num_boards)
-		    b.blank()
-		    
-		    try:
-		        b.draw_pattern(options.count)
+    
+    while True:
+        for fn in patterns:
+            pattern = bp.Bemis100Pattern(fn, options.num_boards)
+            b.blank()
+            
+            try:
+                b.draw_pattern(pattern, num_times=options.count)
             except KeyboardInterrupt:
                 print "\b\b\b",
                 print "done"

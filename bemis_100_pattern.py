@@ -1,8 +1,6 @@
 #!/usr/bin/env python2.6
 from __future__ import division
 
-import numpy as np
-import re
 import Image as im
 
 '''This program generates patterns for the Bemis100 lighting system. A pattern
@@ -13,6 +11,7 @@ the Bemis100.
 class Bemis100Pattern:
     def __init__(self, filename, num_boards=None):
         self.filename = filename
+        self.current_row = 0
         self.read_image(2*num_boards)
 
     def read_image(self, target_width=None):
@@ -20,35 +19,42 @@ class Bemis100Pattern:
         format for the Bemis100.'''
         image = im.open(self.filename)
         (width,height)=image.size
-        
+
         if not target_width == None:
             image = image.resize((target_width, height), im.ANTIALIAS)
             (width,height) = image.size
 
-        rgbim = image.convert('RGB')
-        data = np.array([([output_char(c) for c in p]) for p in rgbim.getdata()])
-        self.image_data = data.reshape((-1,width,3))
-
-        # This section is used to load frames from an animated .gif which is
-        # passed to the pattern generator. It seeks to each frame in the file
-        # and adds whatever data is found there to the current pattern. When the
-        # end of the file is reached, an EOFError is raised.
+        image = image.convert('RGB')
+        
+        self.image_data = []
+        
         try:
-            while 1:
+            while True:
+                frame = image.getdata()
+                for r in range(height):
+                    row_pix = (frame[i] for i in range(r*width, (r+1)*width))
+                    row_raw = (b for pix in row_pix for b in pix)
+                    row = bytearray((output_char(c) for c in row_raw))
+                    
+                    self.image_data.append(row)
+                
                 image.seek(image.tell()+1)
-                rgbim = image.convert('RGB')
-                (width,height)=rgbim.size
-                data = np.array([([output_char(c) for c in p]) for p in rgbim.getdata()])
-                self.image_data = np.vstack((self.image_data,\
-                        np.array(list(data)).reshape((-1,width,3))))
+        
         except EOFError:
             pass
+            
+    def __iter__(self):
+        return iter(self.image_data)
+
 
 def output_char(value):
     """Return a sequence of boolean states for a pwm representation of the 8-bit
     integer value. Our firmware only implements 8 shades, so we indicate the
     brightness of a pixel by the number of 1s in an 8-bit string, which we
     transmit as a single character."""
+    
+    # FIXME: Really?
+    
     raw = str(int(value>=255*1))+\
             str(int(value>=255*7/8))+\
             str(int(value>=255*6/8))+\
