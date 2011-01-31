@@ -1,9 +1,9 @@
 #!/usr/bin/env python2.6
 from __future__ import division
 
-import bemis_100_pattern as bp
-import spectrogram_pattern as sp
-import beat_pattern as beatp
+import pattern as bp
+import spectrogram as sp
+import beat as beatp
 import serial
 import time, sys, os
 from optparse import OptionParser
