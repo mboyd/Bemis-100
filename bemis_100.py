@@ -2,6 +2,8 @@
 from __future__ import division
 
 import bemis_100_pattern as bp
+import spectrogram_pattern as sp
+import beat_pattern as beatp
 import serial
 import time, sys, os
 from optparse import OptionParser
@@ -25,7 +27,8 @@ class Bemis100:
                 bytesize=serial.EIGHTBITS,
                 stopbits=serial.STOPBITS_ONE,
                 parity=serial.PARITY_NONE,
-                timeout=0.5)
+                timeout=0.5,
+                writeTimeout=0)
         self.blank()
                 
     def blank(self):
@@ -119,8 +122,8 @@ if __name__ == '__main__':
     p.add_option('-n', type="int", action='store', dest='num_boards', 
                     default='83', help='Number of boards (default 83)')
     
-    p.add_option('-d', action="store", dest="device", default="/dev/ttyUSB0", 
-                    help="Device path (default /dev/ttyUSB0)")
+    p.add_option('-d', action="store", dest="device", default="", 
+                    help="Device path")
     
     p.add_option('-f', type='int', action='store', dest='framerate', 
                     default='30', help='Framerate (Hz, default 30)')
@@ -134,25 +137,35 @@ if __name__ == '__main__':
     
     p.add_option('-s','--sim', action='store_true', dest='sim',default=False,
                     help='Simulate the Bemis100 only')
+
+    p.add_option('-a', action='store', dest='audio',default=None,
+            help='Run audio tracking (default is "rainbow" pattern)')
     
     (options, args) = p.parse_args()
+
     
-    if len(args) < 1:
+    if len(args) < 1 and not options.audio:
         p.print_help()
         sys.exit(1)
         
     patterns = []
-
-    if os.path.isfile(args[0]):
-        patterns.append(args[0])
-    elif os.path.isdir(args[0]):
-        patterns.extend([os.path.join(args[0], fn) for fn in os.listdir(args[0])])
+    
+    if options.audio:
+        patterns = [None]
     else:
-        print "Not a pattern file or directory: %s\n\n" % args[0]
-        p.print_help()
-        sys.exit(1)
+        if os.path.isfile(args[0]):
+            patterns.append(args[0])
+        elif os.path.isdir(args[0]):
+            patterns.extend([os.path.join(args[0], fn) for fn in os.listdir(args[0])])
+        else:
+            print "Not a pattern file or directory: %s\n\n" % args[0]
+            p.print_help()
+            sys.exit(1)
         
     if not options.sim:
+        
+        
+        
         b = Bemis100(options.device, options.num_boards, options.framerate)
     else:
         b = SimBemis100(options.device, options.num_boards, options.framerate)
@@ -165,7 +178,13 @@ if __name__ == '__main__':
     
     while True:
         for fn in patterns:
-            pattern = bp.Bemis100Pattern(fn, options.num_boards)
+            if options.audio:
+                if options.audio == 'rainbow':
+                    pattern = beatp.BeatPattern()
+                else:
+                    pattern = sp.SpectrogramPattern()
+            else:
+                pattern = bp.Bemis100Pattern(fn, options.num_boards)
             b.blank()
             
             try:
