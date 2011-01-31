@@ -10,29 +10,12 @@ import numpy as np
 import sys, os, pygame
 from pygame.locals import *
 from threading import Thread
+from pattern import output_char
 
 chunk = 2048
 FORMAT = pyaudio.paInt8
 CHANNELS = 1
 RATE = 44100
-
-def output_char(value):
-    """Return a sequence of boolean states for a pwm representation of the 8-bit
-    integer value. Our firmware only implements 8 shades, so we indicate the
-    brightness of a pixel by the number of 1s in an 8-bit string, which we
-    transmit as a single character."""
-    
-    # FIXME: Really? Awwww. 
-    
-    raw = str(int(value>=255*1))+\
-            str(int(value>=255*7/8))+\
-            str(int(value>=255*6/8))+\
-            str(int(value>=255*5/8))+\
-            str(int(value>=255*4/8))+\
-            str(int(value>=255*3/8))+\
-            str(int(value>=255*2/8))+\
-            str(int(value>=255*1/8))
-    return int(raw,2)
 
 class Listener(Thread):
     def __init__(self):
