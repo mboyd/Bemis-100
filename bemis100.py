@@ -163,8 +163,10 @@ if __name__ == '__main__':
             sys.exit(1)
         
     if not options.sim:
-        
-        
+        if options.device == '':
+            devices = filter(os.path.exists, ['/dev/tty.usbserial', '/dev/ttyUSB0'])
+            if len(devices) > 0:
+                options.device = devices[0]
         
         b = Bemis100(options.device, options.num_boards, options.framerate)
     else:
