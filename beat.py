@@ -12,22 +12,12 @@ from threading import Thread
 import Image as im
 from pattern import output_char
 
-chunk = 2048
+chunk = 1024
 FORMAT = pyaudio.paInt8
 CHANNELS = 1
 RATE = 44100
 
 
-image = im.open('rainbow166x1.gif')
-image = image.convert('RGB')
-image_data = []
-(width,height) = image.size
-frame = image.getdata()
-row_pix = (frame[i] for i in range(width))
-row_raw = (b for pix in row_pix for b in pix)
-row = bytearray((output_char(c) for c in row_raw))
-    
-image_data.append(row)
                 
 
 class Listener(Thread):
@@ -38,14 +28,18 @@ class Listener(Thread):
 
     def run(self):
         p = pyaudio.PyAudio()
-        stream = p.open(format = FORMAT, channels = CHANNELS, rate = RATE,
-		      input = True, frames_per_buffer = chunk)
+        stream = p.open(input_device_index = 3, format = FORMAT, channels = CHANNELS,
+                        rate = RATE, input = True, frames_per_buffer = chunk)
         while True:
-            self.data = stream.read(chunk)
+            try:
+                self.data = stream.read(chunk)
+            except:
+                break
 
 
-def rfft_to_val(c,block_size=2048,sample_rate = RATE):
-    freq_cutoffs = np.array([0,150])
+def rfft_to_val(c,freq_range = [0,10000],gain = 255/750000,
+                block_size=1024,sample_rate = RATE):
+    freq_cutoffs = np.array(freq_range)
     fft_cutoffs = freq_cutoffs * block_size/sample_rate
     x = sum([abs(j) for j in c[1:fft_cutoffs[1]]])
     if x <= 0:
@@ -53,23 +47,47 @@ def rfft_to_val(c,block_size=2048,sample_rate = RATE):
     val = x
     if val < 0:
         val = 0
-    return int(val*255/100000)
+    return int(val*gain)
+
+def data_to_rfft(data):
+    return np.fft.rfft([ord(i) for i in data])
 
 
 class BeatPattern:
     def __init__(self, num_boards = 83):
+#         image = im.open('Patterns/rainbow166x1.gif')
+        image = im.open('Patterns/rainbow166x1center.gif')
+        image = image.convert('RGB')
+        image_data = []
+        (width,height) = image.size
+        frame = image.getdata()
+        row_pix = (frame[i] for i in range(width))
+        row_raw = (b for pix in row_pix for b in pix)
+        self.rainbow_row = bytearray((output_char(c) for c in row_raw))
+            
+
         self.listener = Listener()
         self.listener.start()
-        self.chunk = 2048
+        self.chunk = 1024
         target_width = num_boards * 6
         self.row = np.zeros(target_width,dtype=np.uint8)
-        self.c = np.fft.rfft([ord(i) for i in self.listener.data])
+        self.c = data_to_rfft(self.listener.data)
 
     def get_line(self):
-        self.c = np.fft.rfft([ord(i) for i in self.listener.data])
-#         self.row=np.tile(rfft_to_rgb(self.c,c_prev),len(self.row)//3)
-        val = rfft_to_val(self.c)
-        return row[0:val] + bytearray([0 for i in range(len(self.row)-val)])
+        if not self.listener.isAlive():
+            self.listener = Listener()
+            self.listener.start()
+        self.c = data_to_rfft(self.listener.data)
+        #         self.row=np.tile(rfft_to_rgb(self.c,c_prev),len(self.row)//3)
+        val = rfft_to_val(self.c,freq_range=[20,500],gain=255/150000)
+#         return self.rainbow_row[0:val] + bytearray([0 for i in range(len(self.row)-val)])
+#         return bytearray([0 for i in range((len(self.row)-val)//2)])+\
+#                           self.rainbow_row[83-val:83+val] +\
+#                           bytearray([0 for i in range((len(self.row)-val)//2)])
+        return bytearray([0]*((len(self.row)-val)//2))+\
+                          self.rainbow_row[83-val//2:83+val//2] +\
+                          bytearray([0]*((len(self.row)-val)//2))
+
 
 
     def __iter__(self):
