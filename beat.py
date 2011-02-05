@@ -79,15 +79,27 @@ class BeatPattern:
             self.listener.start()
         self.c = data_to_rfft(self.listener.data)
         #         self.row=np.tile(rfft_to_rgb(self.c,c_prev),len(self.row)//3)
-        val = rfft_to_val(self.c,freq_range=[20,500],gain=255/150000)
+        val = rfft_to_val(self.c,freq_range=[20,500],gain=255/250000)
 #         return self.rainbow_row[0:val] + bytearray([0 for i in range(len(self.row)-val)])
 #         return bytearray([0 for i in range((len(self.row)-val)//2)])+\
 #                           self.rainbow_row[83-val:83+val] +\
 #                           bytearray([0 for i in range((len(self.row)-val)//2)])
-        return bytearray([0]*((len(self.row)-val)//2))+\
-                          self.rainbow_row[83-val//2:83+val//2] +\
-                          bytearray([0]*((len(self.row)-val)//2))
-
+        target_width = len(self.row)
+        rainbow_width = len(self.rainbow_row)
+        assert target_width==rainbow_width, "Rainbow width != target width"
+        val = min(val,rainbow_width/2)
+        # print "val",val
+        # print "len row",target_width
+        # print "rainbow len", rainbow_width
+        rainbow_start = int(int(rainbow_width/2)-val)
+        rainbow_stop = int(int(rainbow_width/2)+val)
+        out = bytearray([0 for i in range(target_width)])
+        out[rainbow_start:rainbow_stop] = self.rainbow_row[rainbow_start:rainbow_stop]
+        # out = bytearray([0]*(len(self.row)-val//2))+\
+                          # self.rainbow_row[83-val//2:83+val//2] +\
+                          # bytearray([0]*(len(self.row)-val//2))
+        # print len(out)
+        return out
 
 
     def __iter__(self):
