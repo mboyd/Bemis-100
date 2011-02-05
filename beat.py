@@ -54,18 +54,47 @@ def data_to_rfft(data):
 
 
 class BeatPattern:
-    def __init__(self, num_boards = 83):
+    def __init__(self, num_boards = None):
 #         image = im.open('Patterns/rainbow166x1.gif')
-        image = im.open('Patterns/rainbow166x1center.gif')
+        # image = im.open('Patterns/rainbow166x1center.gif')
+        # image = image.convert('RGB')
+        # image_data = []
+        # (width,height) = image.size
+        # frame = image.getdata()
+        # row_pix = [frame[i] for i in range(width)]
+        # row_raw = [b for pix in row_pix for b in pix]
+        # # self.rainbow_row = bytearray((output_char(c) for c in row_raw))
+        # self.rainbow_row = np.array(row_raw)
+        self.filename = ('Patterns/rainbow166x1.gif')
+        target_width = 2*num_boards
+        image = im.open(self.filename)
+        (width,height)=image.size
+
+        if not target_width == None:
+            image = image.resize((target_width, height), im.ANTIALIAS)
+            (width,height) = image.size
+
         image = image.convert('RGB')
-        image_data = []
-        (width,height) = image.size
-        frame = image.getdata()
-        row_pix = [frame[i] for i in range(width)]
-        row_raw = [b for pix in row_pix for b in pix]
-        # self.rainbow_row = bytearray((output_char(c) for c in row_raw))
-        self.rainbow_row = np.array(row_raw)
-            
+        
+        self.image_data = []
+        
+        try:
+            while True:
+                frame = image.getdata()
+                for r in range(height):
+                    row_pix = (frame[i] for i in range(r*width, (r+1)*width))
+                    row_raw = (b for pix in row_pix for b in pix)
+                    row = bytearray((output_char(c) for c in row_raw))
+                    
+                    self.image_data.append(row)
+                
+                image.seek(image.tell()+1)
+        
+        except EOFError:
+            pass
+
+        self.pattern_index = 0
+        self.pattern_len = len(self.image_data)
 
         self.listener = Listener()
         self.listener.start()
@@ -99,11 +128,13 @@ class BeatPattern:
         bar_high = int(rainbow_width/2+max_old_val) + bar_width
         bar_high = bar_high + 3 - bar_high % 3
         out = np.array([0 for i in range(target_width)])
-        out[rainbow_start:rainbow_stop] = self.rainbow_row[rainbow_start:rainbow_stop]
+        out[rainbow_start:rainbow_stop] = \
+                self.image_data[self.pattern_index][rainbow_start:rainbow_stop]
         out[bar_low:bar_low+bar_width] = bar_pattern
         out[bar_high-bar_width:bar_high] = bar_pattern 
         averaged_out = out*0.75+self.last_out*0.25
         self.last_out = out
+        self.pattern_index = (self.pattern_index + 1)%self.pattern_len
         return bytearray([output_char(c) for c in averaged_out]) 
 
 
