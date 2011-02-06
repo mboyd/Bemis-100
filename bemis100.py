@@ -184,7 +184,7 @@ if __name__ == '__main__':
     while True:
         for fn in patterns:
             if options.rainbow:
-                pattern = beatp.BeatPattern()
+                pattern = beatp.BeatPattern(args[0])
             elif options.wave:
                 pattern = sp.SpectrogramPattern()
             else:
