@@ -20,7 +20,7 @@ def make_map(config):
 
     # CUSTOM ROUTES HERE
     map.connect('/', controller='Bemis100', action='index')
-    map.connect('/play', controller='Bemis100', action='play')
+    map.connect('/{action}', controller='Bemis100')
 
     map.connect('/{controller}/{action}')
     map.connect('/{controller}/{action}/{id}')

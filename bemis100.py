@@ -55,9 +55,8 @@ class Bemis100:
             self.writer.wait_for_finish()
             print 'Writer done'
     
-    
-    def stop(self):
-        self.writer.pause()
+    def quit(self):
+        self.draw_pattern(None)
             
 class WriteThread(Process):
     
@@ -69,7 +68,8 @@ class WriteThread(Process):
         self.num_boards = num_boards
         self.frame_dt = 1.0 / framerate
         
-        self.play_queue = Queue()
+        self.play_queue = JoinableQueue()
+        
         
         ### CONTROL MUTEXES
         
@@ -77,10 +77,6 @@ class WriteThread(Process):
                                 # staying on the same pattern
         
         self._next = Event()    # If set, skip to the next pattern
-        
-        ### STATUS MUTEXES
-        
-        self._pattern_done = Event()    # Fired when done with the current frame
     
     def add_pattern(self, pattern, num_times):
         self.play_queue.put_nowait((pattern, num_times))
@@ -98,9 +94,10 @@ class WriteThread(Process):
         self._next.set()
     
     def wait_for_finish(self):
-        while self._pattern_done.wait(0.5):
-            if not self.is_alive():
-                raise SystemExit
+        if not self.is_alive():
+            raise SystemExit
+        self.play_queue.join()
+        
 
     def run(self):
         self.open_port()
@@ -110,12 +107,11 @@ class WriteThread(Process):
                 pattern, num_times = self.play_queue.get()
                 
                 if pattern is None:
-                    self._pattern_done.set()
+                    self.play_queue.task_done()
                     sys.exit(0)
                 
                 self.draw_pattern(pattern, num_times)
-                self._pattern_done.set()
-                self._pattern_done.clear()
+                self.play_queue.task_done()
         
         except KeyboardInterrupt:
             pass

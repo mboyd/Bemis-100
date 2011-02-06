@@ -1,4 +1,4 @@
-< %inherit file="/base.mako"/>
+<%inherit file="/base.mako"/>
 
 <div id='queue'>
 	<h2>Queue</h2>

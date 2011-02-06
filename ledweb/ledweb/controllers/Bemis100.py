@@ -42,5 +42,10 @@ class Bemis100Controller(BaseController):
     @jsonify
     def status(self):
         return dict(status=app_globals.bemis100.status())
+    
+    @jsonify
+    def pause(self):
+        app_globals.bemis100.pause()
+        return dict(success=True)
         
     

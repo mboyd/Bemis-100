@@ -3,6 +3,8 @@
 from beaker.cache import CacheManager
 from beaker.util import parse_cache_config_options
 
+import signal
+
 from bemis100 import *
 
 class Globals(object):
@@ -21,4 +23,10 @@ class Globals(object):
         
         self.bemis100 = Bemis100(config['device'], int(config['num_boards']), \
                                 float(config['framerate']))
+        
+        signal.signal(signal.SIGTERM, self.cleanup)
+                                
+    def cleanup(self, signum, frame):
+        print 'Caught shutdown, killing renderer'
+        self.bemis100.quit()
     
