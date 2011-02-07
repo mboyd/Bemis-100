@@ -6,11 +6,10 @@ import pyaudio
 import wave
 import sys
 import numpy as np
-import sys, os, pygame
-from pygame.locals import *
+import sys, os
 from threading import Thread
 import Image as im
-from pattern import output_char
+from pattern import encode_char as output_char
 
 chunk = 1024
 FORMAT = pyaudio.paInt8

@@ -34,7 +34,7 @@ class Bemis100Pattern:
                 for r in range(height):
                     row_pix = (frame[i] for i in range(r*width, (r+1)*width))
                     row_raw = (b for pix in row_pix for b in pix)
-                    row = bytearray((output_char(c) for c in row_raw))
+                    row = bytearray((encode_char(c) for c in row_raw))
                     
                     self.image_data.append(row)
                 
@@ -47,7 +47,7 @@ class Bemis100Pattern:
         return iter(self.image_data)
 
 
-def output_char(value):
+def encode_char(value):
     """Return a sequence of boolean states for a pwm representation of the 8-bit
     integer value. Our firmware only implements 8 shades, so we indicate the
     brightness of a pixel by the number of 1s in an 8-bit string, which we
@@ -64,3 +64,8 @@ def output_char(value):
             str(int(value>=255*2/8))+\
             str(int(value>=255*1/8))
     return int(raw,2)
+
+def decode_char(x):
+    '''Undo the conversion from char values to bytes, in which the value is
+    indicated by the number of 1s in the byte'''
+    return int(bin(x).count('1') * 255/8)
