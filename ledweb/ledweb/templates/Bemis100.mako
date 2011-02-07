@@ -1,5 +1,7 @@
 <%inherit file="/base.mako"/>
 
+
+
 <div id='queue'>
 	<h2>Queue</h2>
 	<p id='controls'>
@@ -17,4 +19,3 @@
 		<img class='pattern' alt='pattern' src='${c.pattern_dir}/${p}'>
 	% endfor
 </div>
-

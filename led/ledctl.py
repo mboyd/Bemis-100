@@ -4,7 +4,7 @@ from __future__ import division
 import pattern
 import multiprocessing, threading, time, socket, re, struct, hashlib
 
-class LEDController:
+class LEDController(object):
     def __init__(self, device, framerate=30, start_websocket=True):
         self.frame_dt = 1.0 / framerate
         self.device = device
@@ -120,7 +120,7 @@ class PatternWriter(multiprocessing.Process):
     
     def draw_pattern(self, pattern, num_times):
         count = 0
-        while self._play.is_set():
+        while True:
             if (num_times > 0 and count == num_times):
                 break
                         
@@ -176,13 +176,13 @@ class WebsocketWriter(PatternWriter):
             key2ns = key2.count(' ')
             n2 = key2n // key2ns
             
-            s = struct.pack("!ii", n1, n2) + data
+            s = struct.pack("!II", n1, n2) + data
             respkey = hashlib.md5(s).digest()
             resp = \
                 "HTTP/1.1 101 Web Socket Protocol Handshake\r\n" + \
                 "Upgrade: WebSocket\r\n" + \
                 "Connection: Upgrade\r\n" + \
-                "Sec-WebSocket-Origin: http://localhost\r\n" + \
+                "Sec-WebSocket-Origin: http://localhost:5000\r\n" + \
                 "Sec-WebSocket-Location: ws://localhost:9999/\r\n" + \
                 "Sec-WebSocket-Protocol: ledweb\r\n\r\n" + \
                 respkey + "\r\n"
@@ -210,9 +210,9 @@ class WebsocketWriter(PatternWriter):
             except socket.error:
                 dead_clients.append(i)
         
-        for i in dead_clients:
-            self.close_sock(self.clients[i])
-            del self.clients[i]
+        for i in range(len(dead_clients)):
+            self.close_sock(self.clients[dead_clients[i]-i])
+            del self.clients[dead_clients[i]-i]
         self.clients_lock.release()
     
     def close_port(self):

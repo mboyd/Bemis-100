@@ -1,5 +1,5 @@
 html {
-  font-family: "Droid sans" sans-serif;
+  font-family: "Myriad Pro" sans-serif;
   margin: 0;
   padding: 0;
 }
@@ -19,6 +19,12 @@ div#header h1 {
   font-size: 28px;
   height: 30px;
   padding: 5px 50px;
+}
+
+#canvas {
+  margin: 5px auto;
+  margin-bottom: 0;
+  width: 100%;
 }
 
 div#content {

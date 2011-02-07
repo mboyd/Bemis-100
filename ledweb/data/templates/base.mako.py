@@ -3,7 +3,7 @@ UNDEFINED = runtime.UNDEFINED
 __M_dict_builtin = dict
 __M_locals_builtin = locals
 _magic_number = 5
-_modified_time = 1296878679.447742
+_modified_time = 1297055120.6320679
 _template_filename='/Users/merritt/Dev/Bemis 100/ledweb/ledweb/templates/base.mako'
 _template_uri='/base.mako'
 _template_cache=cache.Cache(__name__, _modified_time)
@@ -23,8 +23,8 @@ def render_body(context,**pageargs):
         __M_writer(u'<!DOCTYPE html>\n<html>\n<head>\n  <title>LEDWeb Alpha</title>\n  ')
         # SOURCE LINE 5
         __M_writer(escape(h.stylesheet_link('/stylesheets/bemis100.css')))
-        __M_writer(u"\n  <link href='http://fonts.googleapis.com/css?family=Droid+Sans' rel='stylesheet' type='text/css'>\n</head>\n\n<body>\n  <div id='header'>\n    <h1>Bemis 100</h1>\n  </div>\n  \n  <div id='content'>\n    ")
-        # SOURCE LINE 15
+        __M_writer(u"\n  <link href='http://fonts.googleapis.com/css?family=Droid+Sans' rel='stylesheet' type='text/css'>\n  <script src='/javascripts/bemis100_canvas.js'></script>\n</head>\n\n<body>\n  <div id='header'>\n    <h1>Bemis 100</h1>\n  </div>\n  \n  <canvas id='canvas' width='830' height='50'></canvas>\n  \n  <div id='content'>\n    ")
+        # SOURCE LINE 18
         __M_writer(escape(self.body()))
         __M_writer(u'\n  </div>\n\n</body>\n</html>')
         return ''

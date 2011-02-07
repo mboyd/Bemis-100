@@ -10,7 +10,8 @@ class Bemis100(ledctl.LEDController):
                                     start_websocket=start_websocket)
         
         self.num_boards = num_boards
-        self.add_writer(Bemis100Writer(device, num_boards, framerate))
+        if not device == 'sim':
+            self.add_writer(Bemis100Writer(device, num_boards, framerate))
 
 class Bemis100Writer(ledctl.PatternWriter):
     

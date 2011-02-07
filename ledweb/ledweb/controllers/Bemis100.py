@@ -8,7 +8,7 @@ from ledweb.lib.base import BaseController, render
 
 import os, os.path
 
-from ledweb.lib.pattern import *
+from ledweb.lib.led.pattern import *
 
 log = logging.getLogger(__name__)
 
@@ -22,22 +22,23 @@ class Bemis100Controller(BaseController):
     @jsonify
     def play(self):
         if request.params.has_key('pattern'):
-            pattern_file = os.path.join('ledweb/public/', config['pattern_dir'],\
-                                        request.params['pattern'])
-        else:
-            return dict(success=False, error='No pattern specified')
+            try:
+                pattern_file = os.path.join('ledweb/public/', config['pattern_dir'],\
+                                            request.params['pattern'])
+                p = Bemis100Pattern(pattern_file, int(config['num_boards']))
+                
+                if request.params.has_key('num_times'):
+                    n = request.params['num_times']
+                else:
+                    n = -1
+                
+                app_globals.bemis100.add_pattern(p, n)
+            
+            except Exception, e:
+                return dict(success=False, error=str(e))
         
-        try:
-            num_times = int(request.params['num_times'])
-        except Exception:
-            num_times = -1
-        
-        try:
-            p = Bemis100Pattern(pattern_file, int(config['num_boards']))
-            app_globals.bemis100.draw_pattern(p, num_times)
-            return dict(success=True)
-        except Exception, e:
-            return dict(success=False, error=str(e))
+        app_globals.bemis100.play()
+        return dict(success=True)
     
     @jsonify
     def status(self):
@@ -46,6 +47,11 @@ class Bemis100Controller(BaseController):
     @jsonify
     def pause(self):
         app_globals.bemis100.pause()
+        return dict(success=True)
+    
+    @jsonify
+    def next(self):
+        app_globals.bemis100.next()
         return dict(success=True)
         
     
