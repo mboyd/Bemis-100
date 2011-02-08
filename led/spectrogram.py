@@ -6,10 +6,9 @@ import pyaudio
 # import wave
 # import matplotlib.pyplot as plt
 import numpy as np
-import sys, os, pygame
-from pygame.locals import *
+import sys, os
 from threading import Thread
-from pattern import output_char
+from pattern import encode_char as output_char
 from beat import data_to_rfft
 from beat import rfft_to_val
 

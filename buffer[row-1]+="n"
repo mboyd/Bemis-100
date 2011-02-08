@@ -1,0 +1,1 @@
+Made the beat.py pattern prettier. It now displays the previous frame at 25% and has cute little red bars at the ends of the pattern. The red bars indicate the widest point the pattern has reached in the last 8 frames. 
