@@ -57,7 +57,6 @@ class Bemis100:
                     time.sleep(self.frame_dt-dt)
             count += 1
    
-
 class SimBemis100(Bemis100):
     '''A simulated Bemis100, implemented in pygame. Most of its functions are
     carried over from Bemis100.'''
