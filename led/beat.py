@@ -54,19 +54,6 @@ def data_to_rfft(data):
 
 class BeatPattern:
     def __init__(self, filename, num_boards = 83):
-#         image = im.open('Patterns/rainbow166x1.gif')
-        # image = im.open('Patterns/rainbow166x1center.gif')
-        # image = image.convert('RGB')
-        # image_data = []
-        # (width,height) = image.size
-        # frame = image.getdata()
-        # row_pix = [frame[i] for i in range(width)]
-        # row_raw = [b for pix in row_pix for b in pix]
-        # # self.rainbow_row = bytearray((output_char(c) for c in row_raw))
-        # self.rainbow_row = np.array(row_raw)
-        # self.filename = 'Patterns/rainbow166x1.gif'
-        # self.filename = 'Patterns/mandelbrot3.png'
-        # self.filename = '/Users/robindeits/Documents/Projects/Bemis100/Patterns/Patterns_to_play/rainbow_cont.gif'
         self.filename = filename
         target_width = 2*num_boards
         image = im.open(self.filename)

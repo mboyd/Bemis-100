@@ -35,7 +35,7 @@ if __name__ == '__main__':
     (options, args) = p.parse_args()
 
     
-    if len(args) < 1 and not (options.rainbow or options.wave):
+    if len(args) < 1:
         p.print_help()
         sys.exit(1)    
     
