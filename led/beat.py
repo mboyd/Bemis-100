@@ -8,8 +8,7 @@ import sys
 import numpy as np
 import sys, os
 from threading import Thread
-import Image as im
-from pattern import encode_char as output_char
+import pattern
 
 chunk = 1024
 FORMAT = pyaudio.paInt8
@@ -52,38 +51,16 @@ def data_to_rfft(data):
     return np.fft.rfft([ord(i) for i in data])
 
 
-class BeatPattern:
-    def __init__(self, filename, num_boards = 83):
+class BeatPattern(pattern.Bemis100Pattern):
+    def __init__(self, finename, num_boards=0):
         self.filename = filename
-        target_width = 2*num_boards
-        image = im.open(self.filename)
-        (width,height)=image.size
-
-        if not target_width == 0:
-            image = image.resize((target_width, height), im.ANTIALIAS)
-            (width,height) = image.size
-
-        image = image.convert('RGB')
-        
-        self.image_data = []
-        
-        try:
-            while True:
-                frame = image.getdata()
-                for r in range(height):
-                    row_pix = [frame[i] for i in range(r*width, (r+1)*width)]
-                    row_raw = [b for pix in row_pix for b in pix]
-                    row = np.array(row_raw)
-                    self.image_data.append(row_raw)
-                
-                image.seek(image.tell()+1)
-        
-        except EOFError:
-            pass
-
+        self.current_row = 0
+        self.read_image(2*num_boards)
+        self.start_listener()
         self.pattern_index = 0
         self.pattern_len = len(self.image_data)
 
+    def start_listener(self):
         self.listener = Listener()
         self.listener.start()
         self.chunk = 1024
@@ -120,7 +97,7 @@ class BeatPattern:
         averaged_out = out*0.75+self.last_out*0.25
         self.last_out = out
         self.pattern_index = (self.pattern_index + 1)%self.pattern_len
-        return bytearray([output_char(c) for c in averaged_out]) 
+        return bytearray([encode_char(c) for c in averaged_out]) 
 
 
     def __iter__(self):
