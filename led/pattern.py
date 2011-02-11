@@ -9,18 +9,18 @@ the Bemis100.
 '''
 
 class Bemis100Pattern:
-    def __init__(self, filename, num_boards=None):
+    def __init__(self, filename, num_boards=0):
         self.filename = filename
         self.current_row = 0
         self.read_image(2*num_boards)
 
-    def read_image(self, target_width=None):
+    def read_image(self, target_width=0):
         '''Read the image, then create an array with the data in the correct
         format for the Bemis100.'''
         image = im.open(self.filename)
         (width,height)=image.size
 
-        if not target_width == None:
+        if not target_width == 0:
             image = image.resize((target_width, height), im.ANTIALIAS)
             (width,height) = image.size
 
@@ -55,14 +55,17 @@ def encode_char(value):
     
     # FIXME: Really?
     
-    raw = str(int(value>=255*1))+\
-            str(int(value>=255*7/8))+\
-            str(int(value>=255*6/8))+\
-            str(int(value>=255*5/8))+\
-            str(int(value>=255*4/8))+\
-            str(int(value>=255*3/8))+\
-            str(int(value>=255*2/8))+\
-            str(int(value>=255*1/8))
+    raw = reduce(lambda x,y: x+y,
+            map(lambda x: str(int(x)),
+                [value>=255*i/8. for i in range(1,9)]))
+    # raw = str(int(value>=255*1))+\
+            # str(int(value>=255*7/8))+\
+            # str(int(value>=255*6/8))+\
+            # str(int(value>=255*5/8))+\
+            # str(int(value>=255*4/8))+\
+            # str(int(value>=255*3/8))+\
+            # str(int(value>=255*2/8))+\
+            # str(int(value>=255*1/8))
     return int(raw,2)
 
 def decode_char(x):
