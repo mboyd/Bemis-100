@@ -72,6 +72,7 @@ class BeatPattern:
         if not self.listener.isAlive():
             self.listener = Listener()
             self.listener.start()
+        self.row = np.array([i for i in self.base_pattern.next()])
         self.out = np.array([0 for i in range(target_width)])
 
         self.update_val()
@@ -87,7 +88,6 @@ class BeatPattern:
     def update_val(self):
         c = data_to_rfft(self.listener.data)
         self.val = rfft_to_val(c,freq_range=FREQ_RANGE,gain=GAIN)
-        self.row = np.array([i for i in self.base_pattern.next()])
         self.val = min(self.val,target_width/2-9)
         self.old_vals.insert(0,self.val)
         self.old_vals.pop()
