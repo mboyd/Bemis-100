@@ -2,25 +2,70 @@
 from __future__ import division
 
 import pattern
-import multiprocessing, threading, time, socket, re, struct, hashlib
+import multiprocessing, threading, time, socket, re, struct, hashlib, copy
 
 class LEDController(object):
     def __init__(self, device, framerate=30, start_websocket=True):
         self.frame_dt = 1.0 / framerate
         self.device = device
         
+        self.queue = []
+        self.queue_has_data = threading.Event()
+        self.queue_ready = threading.Event()
+        self.queue_lock = threading.RLock()
+        
         self.writers = []
+        self.writer_count = 0
+        self.done_writer_count = 0
         
         if start_websocket:
-            self.add_writer(WebsocketWriter(framerate))
+            self.add_writer(WebsocketWriter(self.writer_done, framerate))
+    
+    def writer_done(self):
+        """Callback used by writer threads on completion of a pattern.
+        Blocks until all threads are finished, then returns the next pattern."""
+        self.queue_lock.acquire()
+        self.done_writer_count += 1
+                
+        if self.done_writer_count == self.writer_count:
+            self.done_writer_count = 0
+            if len(self.queue) > 0:
+                self.remove_pattern(0)
+            self.queue_lock.release()
+            print 'Writer waiting for data'
+            self.queue_has_data.wait()
+            print 'Writer got data'
+            
+            self.queue_ready.notify()
+        else:
+            self.queue_lock.release()
+            self.queue_ready.wait()
+        
+        self.queue_lock.acquire()
+        data = self.queue[0]
+        self.queue_lock.release()
+        return data
+    
+    def get_queue(self):
+        return self.queue
+    
+    def remove_pattern(self, index):
+        self.queue_lock.acquire()
+        self.queue.pop(index)
+        if len(self.queue) == 0:
+            self.queue_has_data.clear()
+        self.queue_lock.release()
     
     def add_writer(self, writer):
         self.writers.append(writer)
+        self.writer_count += 1
         writer.start()
     
-    def add_pattern(self, pattern, num_times=-1, async=True):
-        for w in self.writers:
-            w.add_pattern(pattern, num_times)
+    def add_pattern(self, pattern, num_times=-1, name='', async=True):
+        self.queue_lock.acquire()
+        self.queue.append((name, pattern, num_times))
+        self.queue_has_data.set()
+        self.queue_lock.release()
         
         if not async:
             self.wait_for_finish()
@@ -52,8 +97,10 @@ class LEDController(object):
             
 class PatternWriter(multiprocessing.Process):
     
-    def __init__(self, framerate):
+    def __init__(self, callback, framerate):
         super(PatternWriter, self).__init__()
+        
+        self.callback = callback
         
         self.frame_dt = 1.0 / framerate
         
@@ -97,7 +144,7 @@ class PatternWriter(multiprocessing.Process):
         self.open_port()
         try:
             while True:
-                pattern, num_times = self.play_queue.get()
+                name, pattern, num_times = self.callback()
                 
                 if pattern is None:
                     raise SystemExit
@@ -148,8 +195,9 @@ class WebsocketWriter(PatternWriter):
         self.clients = []
         self.clients_lock = threading.Lock()
         
-        self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)  
-        self.sock.bind(('', 9999))  
+        self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        self.sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+        self.sock.bind(('', 9999))
         self.sock.listen(1)
         
         self.connection_thread = threading.Thread(target=self.handle_connections)

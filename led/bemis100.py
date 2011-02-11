@@ -11,12 +11,12 @@ class Bemis100(ledctl.LEDController):
         
         self.num_boards = num_boards
         if not device == 'sim':
-            self.add_writer(Bemis100Writer(device, num_boards, framerate))
+            self.add_writer(Bemis100Writer(self.writer_done, device, num_boards, framerate))
 
 class Bemis100Writer(ledctl.PatternWriter):
     
-    def __init__(self, device, num_boards, framerate):
-        super(Bemis100Writer, self).__init__(framerate)
+    def __init__(self, callback, device, num_boards, framerate):
+        super(Bemis100Writer, self).__init__(callback, framerate)
         
         self.device = device
         self.port = None
