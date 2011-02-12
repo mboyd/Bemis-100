@@ -15,8 +15,8 @@ class Bemis100(ledctl.LEDController):
 
 class Bemis100Writer(ledctl.PatternWriter):
     
-    def __init__(self, callback, device, num_boards, framerate):
-        super(Bemis100Writer, self).__init__(callback, framerate)
+    def __init__(self, device, num_boards, framerate):
+        super(Bemis100Writer, self).__init__(framerate)
         
         self.device = device
         self.port = None

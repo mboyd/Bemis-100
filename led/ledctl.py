@@ -10,41 +10,34 @@ class LEDController(object):
         self.device = device
         
         self.queue = []
-        self.queue_has_data = threading.Event()
-        self.queue_ready = threading.Event()
-        self.queue_lock = threading.RLock()
+        self.queue_has_data = multiprocessing.Event()
+        self.queue_lock = multiprocessing.RLock()
+        self.current_pattern = None
         
         self.writers = []
         self.writer_count = 0
         self.done_writer_count = 0
         
         if start_websocket:
-            self.add_writer(WebsocketWriter(self.writer_done, framerate))
-    
-    def writer_done(self):
-        """Callback used by writer threads on completion of a pattern.
-        Blocks until all threads are finished, then returns the next pattern."""
-        self.queue_lock.acquire()
-        self.done_writer_count += 1
-                
-        if self.done_writer_count == self.writer_count:
-            self.done_writer_count = 0
-            if len(self.queue) > 0:
-                self.remove_pattern(0)
-            self.queue_lock.release()
-            print 'Writer waiting for data'
-            self.queue_has_data.wait()
-            print 'Writer got data'
-            
-            self.queue_ready.notify()
-        else:
-            self.queue_lock.release()
-            self.queue_ready.wait()
+            self.add_writer(WebsocketWriter(framerate))
         
-        self.queue_lock.acquire()
-        data = self.queue[0]
-        self.queue_lock.release()
-        return data
+        self.queue_thread = threading.Thread(target=self.pump_queue)
+        self.queue_thread.start()
+    
+    def pump_queue(self):
+        while True:
+            self.queue_has_data.wait()
+            self.queue_lock.acquire()
+            p = self.queue.pop(0)
+            self.current_pattern = p
+            self.queue_lock.release()
+            for w in self.writers:
+                w.add_pattern(p)
+            
+            self.wait_for_finish()
+            
+    def get_current_pattern(self):
+        return self.current_pattern
     
     def get_queue(self):
         return self.queue
@@ -57,13 +50,17 @@ class LEDController(object):
         self.queue_lock.release()
     
     def add_writer(self, writer):
+        i, o = multiprocessing.Pipe()
+        writer.setup(i, o)
         self.writers.append(writer)
         self.writer_count += 1
         writer.start()
     
     def add_pattern(self, pattern, num_times=-1, name='', async=True):
+        print 'Attempting to add pattern...'
         self.queue_lock.acquire()
         self.queue.append((name, pattern, num_times))
+        print 'Added pattern to queue'
         self.queue_has_data.set()
         self.queue_lock.release()
         
@@ -97,10 +94,8 @@ class LEDController(object):
             
 class PatternWriter(multiprocessing.Process):
     
-    def __init__(self, callback, framerate):
+    def __init__(self, framerate):
         super(PatternWriter, self).__init__()
-        
-        self.callback = callback
         
         self.frame_dt = 1.0 / framerate
         
@@ -111,6 +106,10 @@ class PatternWriter(multiprocessing.Process):
         
         self._next = multiprocessing.Event()    # If set, skip to the next pattern
     
+    def setup(self, pipe_in, pipe_out):
+        self.pipe_in = pipe_in  # For use inside this process
+        self.pipe_out = pipe_out    # For exterior use
+    
     def open_port(self):
         raise NotImplementedError
     
@@ -120,8 +119,8 @@ class PatternWriter(multiprocessing.Process):
     def close_port(self):
         raise NotImplementedError
     
-    def add_pattern(self, pattern, num_times):
-        self.play_queue.put_nowait((pattern, num_times))
+    def add_pattern(self, pattern_data):
+        self.pipe_out.send(pattern_data)
     
     def play(self):
         self._play.set()
@@ -138,19 +137,19 @@ class PatternWriter(multiprocessing.Process):
     def wait_for_finish(self):
         if not self.is_alive():
             raise SystemExit
-        self.play_queue.join()
+        status = self.pipe_out.recv()
 
     def run(self):
         self.open_port()
         try:
             while True:
-                name, pattern, num_times = self.callback()
+                name, pattern, num_times = self.pipe_in.recv()
                 
                 if pattern is None:
                     raise SystemExit
                 
                 self.draw_pattern(pattern, num_times)
-                self.play_queue.task_done()
+                self.pipe_in.send(dict(status='done'))
         
         except (KeyboardInterrupt, SystemExit):
             self.exit()
@@ -158,8 +157,7 @@ class PatternWriter(multiprocessing.Process):
     def exit(self):
         print 'Writer thread exiting'
         try:
-            while self.play_queue.get_nowait():
-                self.play_queue.task_done()
+            self.pipe_out.close()
         except Exception:
             pass
         self.close_port()
