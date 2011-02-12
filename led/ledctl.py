@@ -10,31 +10,24 @@ class LEDController(object):
         self.device = device
         
         self.queue = []
-        self.queue_has_data = multiprocessing.Event()
-        self.queue_lock = multiprocessing.RLock()
+        self.queue_has_data = threading.Event()
+        self.queue_lock = threading.RLock()
         self.current_pattern = None
         
         self.writers = []
         self.writer_count = 0
         self.done_writer_count = 0
         
+        self._play = threading.Event()    # Continue playing; if not set, enter pause mode, 
+                                                # staying on the same pattern
+        
+        self._next = threading.Event()    # If set, skip to the next pattern
+        
         if start_websocket:
             self.add_writer(WebsocketWriter(framerate))
         
         self.queue_thread = threading.Thread(target=self.pump_queue)
         self.queue_thread.start()
-    
-    def pump_queue(self):
-        while True:
-            self.queue_has_data.wait()
-            self.queue_lock.acquire()
-            p = self.queue.pop(0)
-            self.current_pattern = p
-            self.queue_lock.release()
-            for w in self.writers:
-                w.add_pattern(p)
-            
-            self.wait_for_finish()
             
     def get_current_pattern(self):
         return self.current_pattern
@@ -68,22 +61,16 @@ class LEDController(object):
             self.wait_for_finish()
     
     def play(self):
-        for w in self.writers:
-            w.play()
+        self._play.set()
     
     def pause(self):
-        for w in self.writers:
-            w.pause()
+        self._play.clear()
     
     def is_playing(self):
-        if len(self.writers) > 0:
-            return self.writers[0].is_playing()
-        else:
-            return False
+        return self._play.is_set()
     
     def next(self):
-        for w in self.writers:
-            w.next()
+        self._next.set()
     
     def wait_for_finish(self):
         for w in self.writers:
@@ -91,6 +78,46 @@ class LEDController(object):
     
     def quit(self):
         self.add_pattern(None)
+    
+    def pump_queue(self):
+        while True:
+            self.queue_has_data.wait()
+            self.queue_lock.acquire()
+            name, pattern, n = self.queue.pop(0)
+            self.current_pattern = pattern
+            self.queue_lock.release()
+            
+            self.draw_pattern(pattern, n)
+    
+    def draw_pattern(self, pattern, num_times):
+        count = 0
+        while True:
+            if (num_times > 0 and count == num_times):
+                break
+            
+            for frame in pattern:
+                if not self._play.is_set():
+                    self._play.wait()
+                
+                if self._next.is_set():
+                    self._next.clear()
+                    return
+                
+                row_start = time.time()
+                
+                self.draw_frame(frame)
+                
+                dt = time.time() - row_start
+                if dt < self.frame_dt:
+                    time.sleep(self.frame_dt - dt)
+                else:
+                    print 'Draw slow by %f sec' % (dt-self.frame_dt)
+                
+            count += 1
+    
+    def draw_frame(self, frame):
+        for w in self.writers:
+            w.send_frame(frame)
             
 class PatternWriter(multiprocessing.Process):
     
@@ -98,13 +125,6 @@ class PatternWriter(multiprocessing.Process):
         super(PatternWriter, self).__init__()
         
         self.frame_dt = 1.0 / framerate
-        
-        self.play_queue = multiprocessing.JoinableQueue()
-        
-        self._play = multiprocessing.Event()    # Continue playing; if not set, enter pause mode, 
-                                                # staying on the same pattern
-        
-        self._next = multiprocessing.Event()    # If set, skip to the next pattern
     
     def setup(self, pipe_in, pipe_out):
         self.pipe_in = pipe_in  # For use inside this process
@@ -119,37 +139,20 @@ class PatternWriter(multiprocessing.Process):
     def close_port(self):
         raise NotImplementedError
     
-    def add_pattern(self, pattern_data):
+    def send_frame(self, pattern_data):
         self.pipe_out.send(pattern_data)
     
-    def play(self):
-        self._play.set()
-    
-    def pause(self):
-        self._play.clear()
-    
-    def is_playing(self):
-        return self._play.is_set()
-    
-    def next(self):
-        self._next.set()
-    
-    def wait_for_finish(self):
-        if not self.is_alive():
-            raise SystemExit
-        status = self.pipe_out.recv()
-
     def run(self):
         self.open_port()
         try:
             while True:
-                name, pattern, num_times = self.pipe_in.recv()
+                frame = self.pipe_in.recv()
                 
                 if pattern is None:
                     raise SystemExit
                 
-                self.draw_pattern(pattern, num_times)
-                self.pipe_in.send(dict(status='done'))
+                self.draw_frame(frame)
+                #self.pipe_in.send(dict(status='done'))
         
         except (KeyboardInterrupt, SystemExit):
             self.exit()
@@ -157,35 +160,12 @@ class PatternWriter(multiprocessing.Process):
     def exit(self):
         print 'Writer thread exiting'
         try:
-            self.pipe_out.close()
-        except Exception:
-            pass
+            self.pipe_in.send(dict(status='exiting'))
+            self.pipe_in.close()
+        except Exception, e:
+            print 'Got exception on exit: ', e
         self.close_port()
         raise SystemExit
-    
-    def draw_pattern(self, pattern, num_times):
-        count = 0
-        while True:
-            if (num_times > 0 and count == num_times):
-                break
-                        
-            for frame in pattern:
-                if not self._play.is_set():
-                    self._play.wait()
-                
-                if self._next.is_set():
-                    self._next.clear()
-                    return
-                                
-                row_start = time.time()
-                
-                self.draw_frame(frame)
-                
-                dt = time.time() - row_start
-                if dt < self.frame_dt:
-                    time.sleep(self.frame_dt - dt)
-            count += 1
-
 
 class WebsocketWriter(PatternWriter):
 

@@ -42,7 +42,7 @@ class Bemis100Controller(BaseController):
     
     @jsonify
     def queue(self):
-        return dict(queue=[p[0] for p in app_globals.bemis100.get_queue()])
+        return dict(queue=[p for p in app_globals.bemis100.get_queue()])
     
     @jsonify
     def status(self):
