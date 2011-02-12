@@ -37,13 +37,9 @@ class Bemis100Controller(BaseController):
             
             except Exception, e:
                 return dict(success=False, error=str(e))
-        
-        app_globals.bemis100.play()
-        return dict(success=True)
         elif request.params.has_key('beatpattern'):
             try:
-                pattern_file =
-                os.path.join('ledweb/public/',config['pattern_dir'],\
+                pattern_file = os.path.join('ledweb/public/',config['pattern_dir'],\
                         request.params['beatpattern'])
                 base = Bemis100Pattern(pattern_file, int(config['num_boards']))
                 p = BeatPatternRMS(base)
@@ -59,6 +55,7 @@ class Bemis100Controller(BaseController):
         
         app_globals.bemis100.play()
         return dict(success=True)
+        
 
 
     

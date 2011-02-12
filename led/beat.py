@@ -23,18 +23,19 @@ RMS_CHUNK = 64
                 
 
 class Listener(Thread):
-    def __init__(self):
+    def __init__(self,chunk):
         Thread.__init__(self)
         self.daemon=True
         self.data = [chr(int(i)) for i in np.zeros(chunk)]
+        self.chunk=chunk
 
     def run(self):
         p = pyaudio.PyAudio()
         stream = p.open(input_device_index = 3, format = FORMAT, channels = CHANNELS,
-                        rate = RATE, input = True, frames_per_buffer = chunk)
+                        rate = RATE, input = True, frames_per_buffer = self.chunk)
         while True:
             try:
-                self.data = stream.read(chunk)
+                self.data = stream.read(self.chunk)
             except:
                 break
 
@@ -62,10 +63,9 @@ class BeatPattern:
         self.start_listener(CHUNK)
 
     def start_listener(self,chunk=CHUNK):
-        self.listener = Listener()
+        self.listener = Listener(chunk)
         self.listener.start()
-        self.chunk = chunk
-        self.last_out = np.zeros(len(self.image_data[self.pattern_index]))
+        self.last_out = np.zeros(len(self.base_pattern.next()))
         self.old_vals = [0 for i in range(8)]
         self.c = data_to_rfft(self.listener.data)
 
