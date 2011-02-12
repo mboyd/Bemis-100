@@ -1,15 +1,15 @@
 <%inherit file="/base.mako"/>
 
-
-
 <div id='queue'>
 	<h2>Queue</h2>
-	<p id='controls'>
-		<a>Play</a>
-	</p>
 	<ul>
-		<li>Pattern 1</li>
-  	<li>Pattern 2</li>
+	 <li><img src='patterns/cylon8x16.gif'></li>
+   <li><img src='patterns/mandelbot.gif'></li>
+	 <li><img src='patterns/mandelbrot2.png'></li>
+	 <li><img src='patterns/mandelbrot3.png'></li>
+	 <li><img src='patterns/rainbow.gif'></li>
+	 <li><img src='patterns/rainbow166x1.gif'></li>
+	 <li><img src='patterns/rainbow166x1center.gif'></li>
 	</ul>
 </div>
 

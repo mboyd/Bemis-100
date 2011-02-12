@@ -55,14 +55,17 @@ def encode_char(value):
     
     # FIXME: Really?
     
-    raw = str(int(value>=255*1))+\
-            str(int(value>=255*7/8))+\
-            str(int(value>=255*6/8))+\
-            str(int(value>=255*5/8))+\
-            str(int(value>=255*4/8))+\
-            str(int(value>=255*3/8))+\
-            str(int(value>=255*2/8))+\
-            str(int(value>=255*1/8))
+    raw = reduce(lambda x,y: x+y,
+            map(lambda x: str(int(x)),
+                [value>=255*i/8. for i in range(1,9)]))
+    # raw = str(int(value>=255*1))+\
+            # str(int(value>=255*7/8))+\
+            # str(int(value>=255*6/8))+\
+            # str(int(value>=255*5/8))+\
+            # str(int(value>=255*4/8))+\
+            # str(int(value>=255*3/8))+\
+            # str(int(value>=255*2/8))+\
+            # str(int(value>=255*1/8))
     return int(raw,2)
 
 def decode_char(x):

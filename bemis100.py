@@ -26,8 +26,8 @@ if __name__ == '__main__':
     p.add_option('-s','--sim', action='store_true', dest='sim',default=False,
                     help='Simulate the Bemis100 only')
 
-    p.add_option('-b','--rainbow', action='store_true', dest='rainbow',default=False,
-            help='Rainbow beat pattern')
+    p.add_option('-b','--beat', action='store_true', dest='beat',default=False,
+            help='Beat pattern')
 
     p.add_option('-w','--wave', action='store_true',dest='wave',default=False,
                  help='Wave beat pattern')
@@ -55,19 +55,19 @@ if __name__ == '__main__':
         
     patterns = []
     
-    if options.rainbow:
-        patterns = [beat.BeatPattern()]
-    elif options.wave:
-        patterns = [spectrogram.SpectromgramPattern()]
-    else:
-        for fn in args:
-            if os.path.isfile(fn):
-                patterns.append(pattern.Bemis100Pattern(fn, options.num_boards))
-            elif os.path.isdir(fn):
-                names = [os.path.join(fn, f) for f in os.listdir(fn)]
-                patterns.extend([pattern.Bemis100Pattern(f, options.num_boards) for f in names])
+    for fn in args:
+        if os.path.isfile(fn):
+            if options.beat:
+                new_pattern = beat.BeatPattern(pattern.Bemis100Pattern(fn,
+                    options.num_boards))
             else:
-                print "Not a pattern file or directory: %s\n\n" % fn 
+                new_pattern = pattern.Bemis100Pattern(fn,options.num_boards)
+            patterns.append(new_pattern)
+        elif os.path.isdir(fn):
+            names = [os.path.join(fn, f) for f in os.listdir(fn)]
+            patterns.extend([pattern.Bemis100Pattern(f, options.num_boards) for f in names])
+        else:
+            print "Not a pattern file or directory: %s\n\n" % fn 
     
     print "done\nPlaying...",
     sys.stdout.flush()

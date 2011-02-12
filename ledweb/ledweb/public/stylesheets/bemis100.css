@@ -2,48 +2,117 @@ html {
   font-family: "Myriad Pro" sans-serif;
   margin: 0;
   padding: 0;
+  background: #202020;
+  color: #aaa;
 }
 
 body {
-  margin: 0;
+  margin: 20px;
+  background: #333333;
+  border-radius: 10px;
   padding: 0;
+}
+
+div#content {
+  padding-bottom: 5px;
 }
 
 div#header {
   width: 100%;
-  background: #92B3FE;
+  background-image: -webkit-gradient(
+      linear,
+      right top,
+      left top,
+      color-stop(1, rgb(62,62,62)),
+      color-stop(0, rgb(41,41,41))
+  );
+  border-radius: 10px;
   overflow: hidden;
 }
 
 div#header h1 {
-  font-size: 28px;
+  font-size: 32px;
   height: 30px;
   padding: 5px 50px;
 }
 
-#canvas {
-  margin: 5px auto;
-  margin-bottom: 0;
+div#liveview {
+  width: 95%;
+  margin: 15px 2%;
+  padding: 3px;
+  margin-bottom: 10px;
+  background: #414141;
+  border: 5px solid #414141;
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+div#liveview canvas {
   width: 100%;
 }
 
-div#content {
+div#liveview div#controls {
+  width: 100%;
+  text-align: center;
+  margin: 5px auto;
+  background: inherit;
+}
 
+div#controls a {
+  text-decoration: none;
+  color: #aaa;
+  font-weight: 90;
 }
 
 div#queue {
-  width: 150px;
-  margin: 0 30px;
+  width: 130px;
+  margin: 0 2%;
   float: left;
+  background: #414141;
+  border-radius: 10px;
 }
 
+div#queue h2 {
+  margin-bottom: 15px;
+  width: 100%;
+  text-align: center;
+}
+
+div#queue ul {
+  margin-top: 0;
+}
+
+div#queue ul li {
+  list-style-type: none;
+  margin: auto;
+  padding: 0;
+}
+
+div#queue ul li img {
+  width: 50px;
+  height: 50px;
+  margin: auto;
+  border: 2px solid #202020;
+  border-radius: 5px;
+}
 
 div#patterns {
   overflow: auto;
-  margin: auto;
+  margin-bottom: 10px;;
+  background: #aaa;
+  border-radius: 10px;
+  margin-right: 2%;
+  background-image: -webkit-gradient(
+      linear,
+      left bottom,
+      left top,
+      color-stop(1, rgb(62,62,62)),
+      color-stop(0, rgb(21,21,21))
+  );
 }
 
 div#patterns h2 {
+  margin-left: 20px;
   margin-bottom: 0;
 }
 
@@ -51,4 +120,7 @@ div#patterns img {
   width: 200px;
   height: 200px;
   margin: 20px;
+  padding: 3px;
+  background: #202020;
+  border-radius: 5px;
 }

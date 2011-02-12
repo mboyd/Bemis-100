@@ -8,14 +8,15 @@ import sys
 import numpy as np
 import sys, os
 from threading import Thread
-import Image as im
-from pattern import encode_char as output_char
+import pattern
 
-chunk = 1024
+CHUNK = 1024
 FORMAT = pyaudio.paInt8
 CHANNELS = 1
 RATE = 44100
-
+BAR_PATTERN = [255,0,0]
+FREQ_RANGE = [0,200] #Hz
+GAIN = 0.0017
 
                 
 
@@ -53,41 +54,16 @@ def data_to_rfft(data):
 
 
 class BeatPattern:
-    def __init__(self, filename, num_boards = 83):
-        self.filename = filename
-        target_width = 2*num_boards
-        image = im.open(self.filename)
-        (width,height)=image.size
+    '''Does an overlay on top of the base pattern which does fancy audio
+    tracking things.'''
+    def __init__(self, base_pattern):
+        self.base_pattern = base_pattern.__iter__()
+        self.start_listener()
 
-        if not target_width == 0:
-            image = image.resize((target_width, height), im.ANTIALIAS)
-            (width,height) = image.size
-
-        image = image.convert('RGB')
-        
-        self.image_data = []
-        
-        try:
-            while True:
-                frame = image.getdata()
-                for r in range(height):
-                    row_pix = [frame[i] for i in range(r*width, (r+1)*width)]
-                    row_raw = [b for pix in row_pix for b in pix]
-                    row = np.array(row_raw)
-                    self.image_data.append(row_raw)
-                
-                image.seek(image.tell()+1)
-        
-        except EOFError:
-            pass
-
-        self.pattern_index = 0
-        self.pattern_len = len(self.image_data)
-
+    def start_listener(self):
         self.listener = Listener()
         self.listener.start()
-        self.chunk = 1024
-        target_width = num_boards * 6
+        self.chunk = CHUNK
         self.last_out = np.zeros(len(self.image_data[self.pattern_index]))
         self.old_vals = [0 for i in range(8)]
         self.c = data_to_rfft(self.listener.data)
@@ -96,31 +72,42 @@ class BeatPattern:
         if not self.listener.isAlive():
             self.listener = Listener()
             self.listener.start()
-        self.c = data_to_rfft(self.listener.data)
-        #         self.row=np.tile(rfft_to_rgb(self.c,c_prev),len(self.row)//3)
-        val = rfft_to_val(self.c,freq_range=[0,200],gain=255/150000)
-        target_width = len(self.image_data[self.pattern_index])
-        val = min(val,target_width/2-9)
-        self.old_vals.insert(0,val)
-        self.old_vals.pop()
-        max_old_val = max(self.old_vals)
-        pattern_start = int(int(target_width/2)-val)
-        pattern_stop = int(int(target_width/2)+val)
-        bar_pattern = [255,0,0]
-        bar_width = len(bar_pattern)
-        bar_low = int(target_width/2-max_old_val) - bar_width
-        bar_low = bar_low - bar_low % 3
-        bar_high = int(target_width/2+max_old_val) + bar_width
-        bar_high = bar_high + 3 - bar_high % 3
-        out = np.array([0 for i in range(target_width)])
-        out[pattern_start:pattern_stop] = \
-                self.image_data[self.pattern_index][pattern_start:pattern_stop]
-        out[bar_low:bar_low+bar_width] = bar_pattern
-        out[bar_high-bar_width:bar_high] = bar_pattern 
-        averaged_out = out*0.75+self.last_out*0.25
+        self.row = np.array([i for i in self.base_pattern.next()])
+        self.out = np.array([0 for i in range(target_width)])
+
+        self.update_val()
+
+        self.mask_row()
+
+        self.add_bar()
+
+        averaged_out = self.out*0.75+self.last_out*0.25
         self.last_out = out
-        self.pattern_index = (self.pattern_index + 1)%self.pattern_len
-        return bytearray([output_char(c) for c in averaged_out]) 
+        return bytearray([encode_char(c) for c in averaged_out]) 
+
+    def update_val(self):
+        c = data_to_rfft(self.listener.data)
+        self.val = rfft_to_val(c,freq_range=FREQ_RANGE,gain=GAIN)
+        self.val = min(self.val,target_width/2-9)
+        self.old_vals.insert(0,self.val)
+        self.old_vals.pop()
+
+    def mask_row(self):
+        target_width=len(self.row)
+        pattern_start = int(int(target_width/2)-self.val)
+        pattern_stop = int(int(target_width/2)+self.val)
+        self.out[pattern_start:pattern_stop] = \
+                self.row[pattern_start:pattern_stop]
+
+    def add_bar(self):
+        max_old_val = max(self.old_vals)
+        bar_width = len(BAR_PATTERN)
+        bar_low = int(target_width/2-max_old_val) - bar_width
+        bar_low = bar_low - bar_low % bar_width
+        bar_high = int(target_width/2+max_old_val) + bar_width
+        bar_high = bar_high + bar_width - bar_high % bar_width
+        self.out[bar_low:bar_low+bar_width] = BAR_PATTERN
+        self.out[bar_high-bar_width:bar_high] = BAR_PATTERN 
 
 
     def __iter__(self):
