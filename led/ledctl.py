@@ -50,10 +50,8 @@ class LEDController(object):
         writer.start()
     
     def add_pattern(self, pattern, num_times=-1, name='', async=True):
-        print 'Attempting to add pattern...'
         self.queue_lock.acquire()
         self.queue.append((name, pattern, num_times))
-        print 'Added pattern to queue'
         self.queue_has_data.set()
         self.queue_lock.release()
         

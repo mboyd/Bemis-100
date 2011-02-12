@@ -1,4 +1,6 @@
 $(document).ready(function() {
+  updateQueue();
+  
   $('#controls a').click(function(evt) {
     evt.preventDefault();
     
@@ -25,4 +27,29 @@ $(document).ready(function() {
       });
     }
   });
+  
+  $('#patterns a').click(function(evt) {
+    evt.preventDefault();
+    
+    var p = evt.target.getAttribute('data-pattern');
+    $.getJSON('/play', {pattern: p}, function(result) {
+      
+    });
+  });
+  
 });
+
+function updateQueue() {
+  $.getJSON('/queue', function(result) {
+    var queue = result['queue'];
+    var qh = ''
+    for (var i = 0; i < queue.length; i++) {
+      var p = queue[i][0];
+      var n = queue[i][1];
+      qh += 
+        '<li><img src="patterns/' + p + '"></li>';
+    }
+    $('#queue ul').html(qh);
+    setTimeout(updateQueue, 500);
+  })
+}
