@@ -46,7 +46,7 @@ class Bemis100Controller(BaseController):
                 os.path.join('ledweb/public/',config['pattern_dir'],\
                         request.params['beatpattern'])
                 base = Bemis100Pattern(pattern_file, int(config['num_boards']))
-                p = RMSBeatPattern
+                p = BeatPatternRMS(base)
                 if request.params.has_key('num_times'):
                     n = request.params['num_times']
                 else:

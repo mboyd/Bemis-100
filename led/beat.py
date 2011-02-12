@@ -17,6 +17,8 @@ RATE = 44100
 BAR_PATTERN = [255,0,0]
 FREQ_RANGE = [0,200] #Hz
 GAIN = 0.0017
+RMS_GAIN = 1
+RMS_CHUNK = 64
 
                 
 
@@ -52,18 +54,17 @@ def rfft_to_val(c,freq_range = [0,10000],gain = 255/750000,
 def data_to_rfft(data):
     return np.fft.rfft([ord(i) for i in data])
 
-
 class BeatPattern:
     '''Does an overlay on top of the base pattern which does fancy audio
     tracking things.'''
-    def __init__(self, base_pattern):
+    def __init__(self, base_pattern, freq_range=FREQ_RANGE,gain=GAIN):
         self.base_pattern = base_pattern.__iter__()
-        self.start_listener()
+        self.start_listener(CHUNK)
 
-    def start_listener(self):
+    def start_listener(self,chunk=CHUNK):
         self.listener = Listener()
         self.listener.start()
-        self.chunk = CHUNK
+        self.chunk = chunk
         self.last_out = np.zeros(len(self.image_data[self.pattern_index]))
         self.old_vals = [0 for i in range(8)]
         self.c = data_to_rfft(self.listener.data)
@@ -113,73 +114,20 @@ class BeatPattern:
     def __iter__(self):
         return iter(self.get_line,None)
 
+class BeatPatternRMS(BeatPattern):
+    '''Same as the beat pattern, but uses the RMS as a measure of amplitude,
+    rather than doing any FFTs'''
+    def __init__(self, base_pattern, gain=RMS_GAIN):
+        self.base_pattern = base_pattern.__iter__()
+        self.start_listener(RMS_CHUNK)
 
-# def readWave(fn):
-#     wf = wave.open(fn, 'rb')
-#     data = wf.readframes(chunk)
-#     all = ''
-#     while data != '':
-#         all+=data
-#         data = wf.readframes(chunk)
-#     return [ord(char) for char in all]
-
-# def recordAudio(seconds):
-#     p = pyaudio.PyAudio()
-#     stream = p.open(format = FORMAT, channels = CHANNELS, rate = RATE,
-#               input = True, frames_per_buffer = chunk)
-#     all = np.zeros(int(RATE*seconds),dtype=np.int8)
-#     print "recording"
-#     for i in range(int(RATE/chunk*seconds)):
-#         data = stream.read(chunk)
-#         all[i*chunk:(i+1)*chunk] = [ord(char) for char in data]
-#     print "done"
-
-#     stream.close()
-#     p.terminate()
-#     return all
-
-# def record_samples(samples,chunk=1024):
-#     p = pyaudio.PyAudio()
-#     stream = p.open(format = FORMAT, channels = CHANNELS, rate = RATE,
-#               input = True, frames_per_buffer = chunk)
-#     all = np.zeros(samples,dtype=np.int8)
-#     print "recording"
-#     for i in range(samples//chunk):
-#         data = stream.read(chunk)
-#         all[i*chunk:(i+1)*chunk] = [ord(char) for char in data]
-#     print "done"
-
-#     stream.close()
-#     p.terminate()
-#     return all
-
-
-# def plotBeats(all):
-#     fft_block_size = 1024
-#     fft_low = []
-#     cutoff_freq = 400 # Hz
-#     fft_cutoff = cutoff_freq * fft_block_size / RATE
-#     for i in range(len(all)//fft_block_size):
-#         fft_low.append(sum(abs(np.fft.rfft(all[i*fft_block_size:(i+1)*fft_block_size])[:fft_cutoff])))
-#     plt.figure()
-#     plt.plot(np.diff(fft_low))
-
-# def plotSpectrogram(all):
-#     plt.figure()
-#     plt.specgram(all, Fs=44100)
-
-# color-> frequency
-# position -> time in the past
-
-# listen to the audio, decode with FFT. 
-# break up fft into three bands (red -> high, blue -> low freq)
-# sum over the components in each band is the brightness of that color at the
-# head
-# pattern propagates from head to tail
-
-# how do we scale the fft values to get an actual brightness?
-# probably just trial and error
-
-# i just need to create an array of rgb triplets. so, let's load in the 
+    def update_val(self):
+        data = np.array([ord(i) for i in self.listener.data])
+        self.val = np.sqrt(np.mean(data**2))
+        self.val = min(self.val,target_width/2-9)
+        self.old_vals.insert(0,self.val)
+        self.old_vals.pop()
+        
+        
 
 
