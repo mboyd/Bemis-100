@@ -70,6 +70,16 @@ class LEDController(object):
     def next(self):
         self._next.set()
     
+    def assert_writers_alive(self):
+        for w in self.writers:
+            if not w.is_alive():
+                raise SystemExit
+    
+    def wait_for_data(self):
+        while len(self.queue) == 0:
+            self.queue_has_data.wait(0.1)
+            self.assert_writers_alive();
+    
     def wait_for_finish(self):
         for w in self.writers:
             w.wait_for_finish()
@@ -79,7 +89,8 @@ class LEDController(object):
     
     def pump_queue(self):
         while True:
-            self.queue_has_data.wait()
+            self.wait_for_data()
+            
             self.queue_lock.acquire()
             name, pattern, n = self.queue.pop(0)
             self.current_pattern = pattern
@@ -94,6 +105,8 @@ class LEDController(object):
                 break
             
             for frame in pattern:
+                self.assert_writers_alive()
+                
                 if not self._play.is_set():
                     self._play.wait()
                 
@@ -116,17 +129,13 @@ class LEDController(object):
     def draw_frame(self, frame):
         for w in self.writers:
             w.send_frame(frame)
-            
+                    
 class PatternWriter(multiprocessing.Process):
     
     def __init__(self, framerate):
         super(PatternWriter, self).__init__()
         
         self.frame_dt = 1.0 / framerate
-    
-    def setup(self, pipe_in, pipe_out):
-        self.pipe_in = pipe_in  # For use inside this process
-        self.pipe_out = pipe_out    # For exterior use
     
     def open_port(self):
         raise NotImplementedError
@@ -137,7 +146,19 @@ class PatternWriter(multiprocessing.Process):
     def close_port(self):
         raise NotImplementedError
     
+    def setup(self, pipe_in, pipe_out):
+        self.pipe_in = pipe_in        # For use inside this process
+        self.pipe_out = pipe_out        # For exterior use
+    
     def send_frame(self, pattern_data):
+        if not self.is_alive():
+            raise SystemExit
+        
+        if self.pipe_out.poll():
+            r = self.pipe_out.recv()
+            if r.has_key('status') and r['status'] == 'exiting':
+                raise SystemExit
+            
         self.pipe_out.send(pattern_data)
     
     def run(self):
@@ -150,14 +171,15 @@ class PatternWriter(multiprocessing.Process):
                     raise SystemExit
                 
                 self.draw_frame(frame)
-                #self.pipe_in.send(dict(status='done'))
         
         except (KeyboardInterrupt, SystemExit):
             self.exit()
     
     def exit(self):
-        print 'Writer thread exiting'
+        print '\b\bExiting, please wait...'
         try:
+            while self.pipe_in.poll():  # Empty buffers
+                self.pipe_in.recv()
             self.pipe_in.send(dict(status='exiting'))
             self.pipe_in.close()
         except Exception, e:

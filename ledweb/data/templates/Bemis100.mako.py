@@ -3,7 +3,7 @@ UNDEFINED = runtime.UNDEFINED
 __M_dict_builtin = dict
 __M_locals_builtin = locals
 _magic_number = 5
-_modified_time = 1297549806.9193671
+_modified_time = 1297550894.467315
 _template_filename='/Users/merritt/Dev/Bemis 100/ledweb/ledweb/templates/Bemis100.mako'
 _template_uri='/Bemis100.mako'
 _template_cache=cache.Cache(__name__, _modified_time)
@@ -30,21 +30,21 @@ def render_body(context,**pageargs):
         c = context.get('c', UNDEFINED)
         __M_writer = context.writer()
         # SOURCE LINE 1
-        __M_writer(u"\n\n<div id='queue'>\n\t<h2>Queue</h2>\n\t<ul>\n\t <li><img src='patterns/cylon8x16.gif'></li>\n   <li><img src='patterns/mandelbot.gif'></li>\n\t <li><img src='patterns/mandelbrot2.png'></li>\n\t <li><img src='patterns/mandelbrot3.png'></li>\n\t <li><img src='patterns/rainbow.gif'></li>\n\t <li><img src='patterns/rainbow166x1.gif'></li>\n\t <li><img src='patterns/rainbow166x1center.gif'></li>\n\t</ul>\n</div>\n\n<div id='patterns'>\n\t<h2>Patterns</h2>\n")
-        # SOURCE LINE 18
+        __M_writer(u"\n\n<div id='queue'>\n\t<h2>Queue</h2>\n\t<ul>\n\t</ul>\n</div>\n\n<div id='patterns'>\n\t<h2>Patterns</h2>\n")
+        # SOURCE LINE 11
         for p in c.patterns:
-            # SOURCE LINE 19
+            # SOURCE LINE 12
             __M_writer(u"\t  <a href='/play?pattern=")
             __M_writer(escape(p))
             __M_writer(u"'>\n\t\t<img class='pattern' data-pattern='")
-            # SOURCE LINE 20
+            # SOURCE LINE 13
             __M_writer(escape(p))
             __M_writer(u"' alt='pattern' src='")
             __M_writer(escape(c.pattern_dir))
             __M_writer(u'/')
             __M_writer(escape(p))
             __M_writer(u"'>\n\t\t</a>\n")
-        # SOURCE LINE 23
+        # SOURCE LINE 16
         __M_writer(u'</div>\n')
         return ''
     finally:
