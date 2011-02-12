@@ -33,7 +33,7 @@ class Bemis100Controller(BaseController):
                 else:
                     n = -1
                 
-                app_globals.bemis100.add_pattern(p, n)
+                app_globals.bemis100.add_pattern(p, n, name=request.params['pattern'])
             
             except Exception, e:
                 return dict(success=False, error=str(e))
@@ -55,13 +55,10 @@ class Bemis100Controller(BaseController):
         
         app_globals.bemis100.play()
         return dict(success=True)
-        
 
-
-    
     @jsonify
     def queue(self):
-        return dict(queue=[p for p in app_globals.bemis100.get_queue()])
+        return dict(queue=[(p[0], p[2]) for p in app_globals.bemis100.get_queue()])
     
     @jsonify
     def status(self):
