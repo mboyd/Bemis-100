@@ -6,10 +6,10 @@ from pylons.decorators import jsonify
 
 from ledweb.lib.base import BaseController, render
 
-import os, os.path
+import os, os.path, shutil
 
-from ledweb.lib.led.pattern import *
-from ledweb.lib.led.beat import *
+from ledweb.lib.led.pattern import Bemis100Pattern
+from ledweb.lib.led.beat import BeatPatternRMS
 
 log = logging.getLogger(__name__)
 
@@ -17,7 +17,23 @@ class LedwebController(BaseController):
 
     def index(self):
         c.pattern_dir = config['pattern_dir']
-        c.patterns = os.listdir(os.path.join('ledweb/public/', c.pattern_dir))
+        
+        def find_patterns(d):
+            l = os.listdir(d)
+            files = []
+            dirs = []
+            for e in l:
+                if os.path.isfile(os.path.join(d, e)):
+                    files.append(e)
+                else:
+                    dirs.append(e)
+            
+            if len(dirs) == 0:
+                return files
+            else:
+                return files.extend([find_patterns(os.path.join(d, sd)) for sd in dirs])
+        
+        c.patterns = find_patterns(os.path.join('ledweb/public/', c.pattern_dir))
         return render('/ledweb.mako')
     
     @jsonify
@@ -51,6 +67,7 @@ class LedwebController(BaseController):
                 return dict(success=False, error=str(e))
         
         app_globals.bemis100.play()
+        
         if format == 'json':
             return dict(success=True)
         else:
@@ -73,5 +90,23 @@ class LedwebController(BaseController):
     def next(self):
         app_globals.bemis100.next()
         return dict(success=True)
+    
+    def upload(self):
+        try:
+            f = request.POST['pattern']
+            fn = f.filename
+            if '/' in fn:
+                fn = fn[fn.rfind('/')+1:]
+                
+            base_path = os.path.join('ledweb/public', config['pattern_dir'])
+            path = os.path.join(base_path, fn)
+            
+            new_f = open(path, 'w')
+            shutil.copyfileobj(f.file, new_f)
+            f.file.close()
+            new_f.close()
+        except Exception:
+            raise
         
+        redirect(url(controller='Ledweb', action='index'))
     
