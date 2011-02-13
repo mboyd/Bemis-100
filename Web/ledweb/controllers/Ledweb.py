@@ -13,12 +13,12 @@ from ledweb.lib.led.beat import *
 
 log = logging.getLogger(__name__)
 
-class Bemis100Controller(BaseController):
+class LedwebController(BaseController):
 
     def index(self):
         c.pattern_dir = config['pattern_dir']
         c.patterns = os.listdir(os.path.join('ledweb/public/', c.pattern_dir))
-        return render('/Bemis100.mako')
+        return render('/ledweb.mako')
     
     @jsonify
     def play(self):
@@ -29,7 +29,7 @@ class Bemis100Controller(BaseController):
                 p = Bemis100Pattern(pattern_file, int(config['num_boards']))
                 
                 if request.params.has_key('num_times'):
-                    n = request.params['num_times']
+                    n = int(request.params['num_times'])
                 else:
                     n = -1
                 

@@ -19,8 +19,8 @@ def make_map(config):
     map.connect('/error/{action}/{id}', controller='error')
 
     # CUSTOM ROUTES HERE
-    map.connect('/', controller='Bemis100', action='index')
-    map.connect('/{action}', controller='Bemis100')
+    map.connect('/', controller='Ledweb', action='index')
+    map.connect('/{action}', controller='Ledweb')
 
     map.connect('/{controller}/{action}')
     map.connect('/{controller}/{action}/{id}')

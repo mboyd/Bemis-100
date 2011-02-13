@@ -204,7 +204,7 @@ class WebsocketWriter(PatternWriter):
     def handle_connections(self):
         while True:
             client, addr = self.sock.accept()
-            print 'Accepted connection from %s' % str(addr)
+            print 'Accepted websocket connection from %s' % str(addr)
             header = ''
             while not re.search("\r\n\r\n.{8}", header): # Receive headers + 8 bytes data
                 header += client.recv(1024)
