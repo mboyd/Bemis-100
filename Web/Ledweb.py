@@ -1,17 +1,15 @@
+#!/usr/bin/env python2.6
 import web
 
-import json, os, os.path, shutil, sys, re
+import os, os.path, shutil, sys, re
 
 sys.path.append('..')
+
+from app_globals import bemis100, config, jsonify
 
 from led.bemis100 import Bemis100
 from led.pattern import Bemis100Pattern
 from led.beat import BeatPatternRMS
-
-config = {'pattern_dir' : 'static/patterns',
-            'device' : 'sim',
-            'num_boards' : 83,
-            'framerate' : 30}
 
 urls = ('/', 'Home',
         '/play', 'Play',
@@ -20,15 +18,8 @@ urls = ('/', 'Home',
         '/next', 'Next',
         '/upload', 'Upload')
 
-bemis100 = None
-
 g = {'config' : config, 'type' : type, 'path_join' : os.path.join}
 render = web.template.render('templates/', base='layout', globals=g)
-
-def jsonify(f):
-    def json_f(*args, **kwargs):
-        return json.dumps(f(*args, **kwargs))
-    return json_f
 
 class Home(object):
 
@@ -55,19 +46,23 @@ class Home(object):
 
 class Play:
     @jsonify
-    def GET(self, format='html'):
+    def GET(self):
+        if re.match('application/json|text/javascript', web.ctx.environ['HTTP_ACCEPT']):
+            format_json = True
+        else:
+            format_json = False
+        
         params = web.input()
         if 'pattern' in params or 'beatpattern' in params:
             try:
                 if 'pattern' in params:
-                    pattern_name = request.params['pattern']
+                    pattern_name = params['pattern']
                     track_beat = 'beat' in params
                 else:
                     pattern_name = params['beatpattern']
                     track_beat = True
                 
-                pattern_file = os.path.join('ledweb/public/', config['pattern_dir'],\
-                                            pattern_name)
+                pattern_file = os.path.join(config['pattern_dir'], pattern_name)
                 
                 p = Bemis100Pattern(pattern_file, config['num_boards'])
                 
@@ -86,7 +81,7 @@ class Play:
         
         bemis100.play()
         
-        if format == 'json':
+        if format_json:
             return dict(success=True)
         else:
             raise web.Found('/')
@@ -116,12 +111,13 @@ class Next(object):
 class Upload(object):
     def POST(self):
         try:
-            f = request.POST['pattern']
+            i = web.input(pattern={})
+            f = i['pattern']
             fn = f.filename
             if '/' in fn:
                 fn = fn[fn.rfind('/')+1:]
                 
-            base_path = os.path.join('ledweb/public', config['pattern_dir'])
+            base_path = config['pattern_dir']
             path = os.path.join(base_path, fn)
             
             new_f = open(path, 'w')
@@ -131,11 +127,9 @@ class Upload(object):
         except Exception:
             raise
         
-        raise Found('/')
+        raise web.Found('/')
 
 if __name__ == '__main__':
-    bemis100 = Bemis100(config['device'], num_boards=config['num_boards'], \
-                            framerate=config['framerate'])
-    
+    sys.argv.append('5000')     # Set port
     app = web.application(urls, globals())
     app.run()

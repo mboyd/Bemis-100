@@ -23,7 +23,7 @@ $(document).ready(function() {
     
     } else if ($(evt.target).hasClass('next')) { 
       $.getJSON('/next', function(result) {
-      
+        updateQueue();
       });
     }
   });
@@ -33,7 +33,7 @@ $(document).ready(function() {
     
     var p = evt.target.getAttribute('data-pattern');
     $.getJSON('/play', {pattern: p}, function(result) {
-      
+      updateQueue();
     });
   });
   
@@ -47,9 +47,8 @@ function updateQueue() {
       var p = queue[i][0];
       var n = queue[i][1];
       qh += 
-        '<li><img src="patterns/' + p + '"></li>';
+        '<li><img src="/static/patterns/' + p + '"></li>';
     }
     $('#queue ul').html(qh);
-    setTimeout(updateQueue, 500);
   })
 }
