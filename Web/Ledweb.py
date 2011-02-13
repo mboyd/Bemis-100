@@ -1,22 +1,38 @@
-import logging
+import web
 
-from pylons import app_globals, config, request, response, session, tmpl_context as c, url
-from pylons.controllers.util import abort, redirect
-from pylons.decorators import jsonify
+import json, os, os.path, shutil, sys, re
 
-from ledweb.lib.base import BaseController, render
+sys.path.append('..')
 
-import os, os.path, shutil
+from led.bemis100 import Bemis100
+from led.pattern import Bemis100Pattern
+from led.beat import BeatPatternRMS
 
-from ledweb.lib.led.pattern import Bemis100Pattern
-from ledweb.lib.led.beat import BeatPatternRMS
+config = {'pattern_dir' : 'static/patterns',
+            'device' : 'sim',
+            'num_boards' : 83,
+            'framerate' : 30}
 
-log = logging.getLogger(__name__)
+urls = ('/', 'Home',
+        '/play', 'Play',
+        '/queue', 'Queue',
+        '/pause', 'Pause',
+        '/next', 'Next',
+        '/upload', 'Upload')
 
-class LedwebController(BaseController):
+bemis100 = None
 
-    def index(self):
-        c.pattern_dir = config['pattern_dir']
+g = {'config' : config, 'type' : type, 'path_join' : os.path.join}
+render = web.template.render('templates/', base='layout', globals=g)
+
+def jsonify(f):
+    def json_f(*args, **kwargs):
+        return json.dumps(f(*args, **kwargs))
+    return json_f
+
+class Home(object):
+
+    def GET(self):
         
         def find_patterns(d):
             l = os.listdir(d)
@@ -24,7 +40,8 @@ class LedwebController(BaseController):
             dirs = []
             for e in l:
                 if os.path.isfile(os.path.join(d, e)):
-                    files.append(e)
+                    if re.match('^[^\.]+\.(gif|png|jpg|jpeg)$', e):
+                        files.append(e)
                 else:
                     dirs.append(e)
             
@@ -33,12 +50,13 @@ class LedwebController(BaseController):
             else:
                 return files.extend([find_patterns(os.path.join(d, sd)) for sd in dirs])
         
-        c.patterns = find_patterns(os.path.join('ledweb/public/', c.pattern_dir))
-        return render('/ledweb.mako')
-    
+        patterns = find_patterns(config['pattern_dir'])
+        return render.home(patterns)
+
+class Play:
     @jsonify
-    def play(self, format='html'):
-        params = request.params
+    def GET(self, format='html'):
+        params = web.input()
         if 'pattern' in params or 'beatpattern' in params:
             try:
                 if 'pattern' in params:
@@ -51,7 +69,7 @@ class LedwebController(BaseController):
                 pattern_file = os.path.join('ledweb/public/', config['pattern_dir'],\
                                             pattern_name)
                 
-                p = Bemis100Pattern(pattern_file, int(config['num_boards']))
+                p = Bemis100Pattern(pattern_file, config['num_boards'])
                 
                 if track_beat:
                     p = BeatPatternRMS(p)
@@ -61,37 +79,42 @@ class LedwebController(BaseController):
                 else:
                     n = -1
                 
-                app_globals.bemis100.add_pattern(p, n, name=pattern_name)
+                bemis100.add_pattern(p, n, name=pattern_name)
             
             except Exception as e:
                 return dict(success=False, error=str(e))
         
-        app_globals.bemis100.play()
+        bemis100.play()
         
         if format == 'json':
             return dict(success=True)
         else:
-            redirect(url(controller='Ledweb', action='index'))
+            raise web.Found('/')
 
+class Queue(object):
     @jsonify
-    def queue(self):
-        return dict(queue=[(p[0], p[2]) for p in app_globals.bemis100.get_queue()])
-    
+    def GET(self):
+        return dict(queue=[(p[0], p[2]) for p in bemis100.get_queue()])
+
+class Status(object):
     @jsonify
-    def status(self):
-        return dict(status=app_globals.bemis100.status())
-    
+    def GET(self):
+        return dict(status=bemis100.status())
+
+class Pause(object):
     @jsonify
-    def pause(self):
-        app_globals.bemis100.pause()
+    def GET(self):
+        bemis100.pause()
         return dict(success=True)
-    
+
+class Next(object):
     @jsonify
-    def next(self):
-        app_globals.bemis100.next()
+    def GET(self):
+        bemis100.next()
         return dict(success=True)
-    
-    def upload(self):
+
+class Upload(object):
+    def POST(self):
         try:
             f = request.POST['pattern']
             fn = f.filename
@@ -108,5 +131,11 @@ class LedwebController(BaseController):
         except Exception:
             raise
         
-        redirect(url(controller='Ledweb', action='index'))
+        raise Found('/')
+
+if __name__ == '__main__':
+    bemis100 = Bemis100(config['device'], num_boards=config['num_boards'], \
+                            framerate=config['framerate'])
     
+    app = web.application(urls, globals())
+    app.run()

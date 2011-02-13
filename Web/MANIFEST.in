@@ -1,3 +1,0 @@
-include ledweb/config/deployment.ini_tmpl
-recursive-include ledweb/public *
-recursive-include ledweb/templates *

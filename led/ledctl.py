@@ -228,7 +228,7 @@ class WebsocketWriter(PatternWriter):
                 "HTTP/1.1 101 Web Socket Protocol Handshake\r\n" + \
                 "Upgrade: WebSocket\r\n" + \
                 "Connection: Upgrade\r\n" + \
-                "Sec-WebSocket-Origin: http://localhost:5000\r\n" + \
+                "Sec-WebSocket-Origin: http://localhost:8080\r\n" + \
                 "Sec-WebSocket-Location: ws://localhost:9999/\r\n" + \
                 "Sec-WebSocket-Protocol: ledweb\r\n\r\n" + \
                 respkey + "\r\n"
