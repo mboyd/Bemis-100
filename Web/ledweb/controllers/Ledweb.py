@@ -21,40 +21,40 @@ class LedwebController(BaseController):
         return render('/ledweb.mako')
     
     @jsonify
-    def play(self):
-        if request.params.has_key('pattern'):
+    def play(self, format='html'):
+        params = request.params
+        if 'pattern' in params or 'beatpattern' in params:
             try:
+                if 'pattern' in params:
+                    pattern_name = request.params['pattern']
+                    track_beat = 'beat' in params
+                else:
+                    pattern_name = params['beatpattern']
+                    track_beat = True
+                
                 pattern_file = os.path.join('ledweb/public/', config['pattern_dir'],\
-                                            request.params['pattern'])
+                                            pattern_name)
+                
                 p = Bemis100Pattern(pattern_file, int(config['num_boards']))
                 
-                if request.params.has_key('num_times'):
-                    n = int(request.params['num_times'])
+                if track_beat:
+                    p = BeatPatternRMS(p)
+                
+                if 'num_times' in params:
+                    n = int(params['num_times'])
                 else:
                     n = -1
                 
-                app_globals.bemis100.add_pattern(p, n, name=request.params['pattern'])
+                app_globals.bemis100.add_pattern(p, n, name=pattern_name)
             
-            except Exception, e:
-                return dict(success=False, error=str(e))
-        elif request.params.has_key('beatpattern'):
-            try:
-                pattern_file = os.path.join('ledweb/public/',config['pattern_dir'],\
-                        request.params['beatpattern'])
-                base = Bemis100Pattern(pattern_file, int(config['num_boards']))
-                p = BeatPatternRMS(base)
-                if request.params.has_key('num_times'):
-                    n = request.params['num_times']
-                else:
-                    n = -1
-                
-                app_globals.bemis100.add_pattern(p, n)
-            
-            except Exception, e:
+            except Exception as e:
                 return dict(success=False, error=str(e))
         
         app_globals.bemis100.play()
-        return dict(success=True)
+        if format == 'json':
+            return dict(success=True)
+        else:
+            redirect(url(controller='Ledweb', action='index'))
 
     @jsonify
     def queue(self):
