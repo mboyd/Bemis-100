@@ -7,7 +7,7 @@ import wave
 import sys
 import numpy as np
 import sys, os
-from multiprocessing import Process, Lock
+from multiprocessing import Process, Lock, Pipe
 from multiprocessing.sharedctypes import Value, Array
 from ctypes import Structure, c_byte, c_double
 import pattern
@@ -18,21 +18,22 @@ CHANNELS = 1
 RATE = 44100
 BAR_PATTERN = [255,0,0]
 FREQ_RANGE = [0,200] #Hz
-GAIN = 0.0017
+GAIN = 0.0025
 RMS_GAIN = 50000
 RMS_CHUNK = 512               
 
-def listen(chunk,data):
-    p = pyaudio.PyAudio()
-    stream = p.open(input_device_index = 3, format = FORMAT, channels = CHANNELS,
-                    rate = RATE, input = True, frames_per_buffer = chunk)
+def listen(chunk,conn):
     while True:
-        try:
-            new_data = stream.read(chunk)
-            for i in range(len(new_data)):
-                data[i] = c_byte(ord(new_data[i]))
-        except:
-            pass
+        p = pyaudio.PyAudio()
+        stream = p.open(input_device_index = 3, format = FORMAT, channels = CHANNELS,
+                        rate = RATE, input = True, frames_per_buffer = chunk)
+        while True:
+            try:
+                new_data = stream.read(chunk)
+                conn.send(new_data)
+            except IOError:
+                print "listener died...restarting"
+                break
 
 def rfft_to_val(c,freq_range = [0,10000],gain = 255/750000,
                 block_size=1024,sample_rate = RATE):
@@ -47,7 +48,7 @@ def rfft_to_val(c,freq_range = [0,10000],gain = 255/750000,
     return int(val*gain)
 
 def data_to_rfft(data):
-    return np.fft.rfft([i for i in data])
+    return np.fft.rfft([ord(i) for i in data])
 
 
 class BeatPattern:
@@ -60,12 +61,10 @@ class BeatPattern:
         self.chunk = chunk
 
     def start_listener(self):
-        lock = Lock()
-        # print [ord(i) for i in start_string]
-        self.data = Array(c_byte,[0]*self.chunk,lock=lock)
-        # print [ord(i) for i in self.data.value]
-        proc = Process(target = listen, args=(self.chunk, self.data))
-        proc.daemonic = True
+        self.parent_conn, child_conn = Pipe(duplex=False)
+
+        proc = Process(target = listen, args=(self.chunk,child_conn))
+        # proc.daemonic = True
         proc.start()
         # self.listener = Listener(self.chunk)
         # self.listener.start()
@@ -75,6 +74,7 @@ class BeatPattern:
             self.base_pattern_iter = self.base_pattern.__iter__()
             self.last_out = np.zeros(len(self.base_pattern_iter.next()))
         self.old_vals = [0 for i in range(8)]
+        self.data = self.parent_conn.recv()
         self.c = data_to_rfft(self.data)
 
     def get_line(self):
@@ -105,6 +105,8 @@ class BeatPattern:
         # print [ord(i) for i in self.data.value]
         # print '\n\n'
         # c = data_to_rfft(self.listener.data)
+        while self.parent_conn.poll():
+            self.data = self.parent_conn.recv()
         c = data_to_rfft(self.data)
         self.val = rfft_to_val(c,freq_range=FREQ_RANGE,gain=GAIN)
         self.val = min(self.val,self.target_width/2-9)
