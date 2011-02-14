@@ -2,12 +2,12 @@ var canvas;
 var ctx;
 var ws;
 
-window.onload = function() {
+$(document).ready(function() {
   canvas = document.getElementById('canvas');
   ctx = canvas.getContext('2d');
   
   startSocketCheck();
-};
+});
 
 function connect() {
   ws = new WebSocket("ws://localhost:9999");
@@ -38,6 +38,6 @@ function startSocketCheck() {
   try {
     connect();
   } catch (err) {
-    setTimeout(startSocketCheck, 500);
+    setTimeout(startSocketCheck, 2000);
   }
 }

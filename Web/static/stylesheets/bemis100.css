@@ -15,6 +15,7 @@ body {
 
 div#content {
   padding-bottom: 5px;
+  overflow: hidden;
 }
 
 div#header {
@@ -123,4 +124,16 @@ div#patterns img {
   padding: 3px;
   background: #202020;
   border-radius: 5px;
+}
+
+div#upload {
+  width: 330px;
+  padding: 5px;
+  margin: 10px auto;
+  background: #414141;
+  border-radius: 10px;
+}
+
+div#upload form input[type="file"] {
+  color: #aaa;
 }
