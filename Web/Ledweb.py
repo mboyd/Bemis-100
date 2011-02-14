@@ -9,7 +9,7 @@ from app_globals import bemis100, config, jsonify
 
 from led.bemis100 import Bemis100
 from led.pattern import Bemis100Pattern
-from led.beat import BeatPatternRMS
+from led.beat import BeatPatternRMS, BeatPattern
 
 urls = ('/', 'Home',
         '/play', 'Play',
@@ -67,7 +67,7 @@ class Play:
                 p = Bemis100Pattern(pattern_file, config['num_boards'])
                 
                 if track_beat:
-                    p = BeatPatternRMS(p)
+                    p = BeatPattern(p)
                 
                 if 'num_times' in params:
                     n = int(params['num_times'])
