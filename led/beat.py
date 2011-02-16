@@ -17,9 +17,9 @@ FORMAT = pyaudio.paInt8
 CHANNELS = 1
 RATE = 44100
 BAR_PATTERN = [255,0,0]
-FREQ_RANGE = [0,200] #Hz
+FREQ_RANGE = [0,200] # Hz 
 GAIN = 0.0025
-RMS_GAIN = 50000
+RMS_GAIN = 50000 # gain
 RMS_CHUNK = 512               
 
 def listen(chunk,conn):
@@ -59,6 +59,8 @@ class BeatPattern:
         self.base_pattern = base_pattern
         self.base_pattern_iter = base_pattern.__iter__()
         self.chunk = chunk
+        self.bar_pos = 0
+        self.bar_decay = 3
 
     def start_listener(self):
         self.parent_conn, child_conn = Pipe(duplex=False)
@@ -73,7 +75,6 @@ class BeatPattern:
         except StopIteration:
             self.base_pattern_iter = self.base_pattern.__iter__()
             self.last_out = np.zeros(len(self.base_pattern_iter.next()))
-        self.old_vals = [0 for i in range(8)]
         self.data = self.parent_conn.recv()
         self.c = data_to_rfft(self.data)
 
@@ -110,8 +111,7 @@ class BeatPattern:
         c = data_to_rfft(self.data)
         self.val = rfft_to_val(c,freq_range=FREQ_RANGE,gain=GAIN)
         self.val = min(self.val,self.target_width/2-9)
-        self.old_vals.insert(0,self.val)
-        self.old_vals.pop()
+        self.bar_pos = max(self.val,self.bar_pos-self.bar_decay)
 
     def mask_row(self):
         pattern_start = int(int(self.target_width/2)-self.val)
@@ -120,11 +120,10 @@ class BeatPattern:
                 self.row[pattern_start:pattern_stop]
 
     def add_bar(self):
-        max_old_val = max(self.old_vals)
         bar_width = len(BAR_PATTERN)
-        bar_low = int(self.target_width/2-max_old_val) - bar_width
+        bar_low = int(self.target_width/2-self.bar_pos) - bar_width
         bar_low = bar_low - bar_low % bar_width
-        bar_high = int(self.target_width/2+max_old_val) + bar_width
+        bar_high = int(self.target_width/2+self.bar_pos) + bar_width
         bar_high = bar_high + bar_width - bar_high % bar_width
         self.out[bar_low:bar_low+bar_width] = BAR_PATTERN
         self.out[bar_high-bar_width:bar_high] = BAR_PATTERN 
