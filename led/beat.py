@@ -60,7 +60,7 @@ class BeatPattern:
         self.base_pattern_iter = base_pattern.__iter__()
         self.chunk = chunk
         self.bar_pos = 0
-        self.bar_decay = 3
+        self.bar_decay = .2
 
     def start_listener(self):
         self.parent_conn, child_conn = Pipe(duplex=False)
@@ -111,7 +111,7 @@ class BeatPattern:
         c = data_to_rfft(self.data)
         self.val = rfft_to_val(c,freq_range=FREQ_RANGE,gain=GAIN)
         self.val = min(self.val,self.target_width/2-9)
-        self.bar_pos = max(self.val,self.bar_pos-self.bar_decay)
+        self.bar_pos = max(self.val,self.bar_pos-(self.bar_pos-self.val)*self.bar_decay)
 
     def mask_row(self):
         pattern_start = int(int(self.target_width/2)-self.val)
