@@ -11,4 +11,4 @@ Firmware, software and web interface for the 1E Bemis100 lighting system.
 ##Usage
 Command line: `python bemis100.py [-d device] [-f framerate] (pattern | pattern_dir) ...`
 
-Web interface: `cd Web; python Ledweb.py`
+Web interface: `cd Web; python ledweb.py`
