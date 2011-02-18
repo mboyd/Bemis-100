@@ -5,7 +5,9 @@ import pattern
 import multiprocessing, threading, time, socket, re, struct, hashlib, copy
 
 class LEDController(object):
-    def __init__(self, device, framerate=30, start_websocket=True):
+    def __init__(self, device, framerate=30, start_websocket=True, \
+                    ws_hostname='localhost', ws_orig_port=5000, ws_port=9999):
+        
         self.frame_dt = 1.0 / framerate
         self.device = device
         
@@ -24,7 +26,7 @@ class LEDController(object):
         self._next = threading.Event()    # If set, skip to the next pattern
         
         if start_websocket:
-            self.add_writer(WebsocketWriter(framerate))
+            self.add_writer(WebsocketWriter(framerate, ws_hostname, ws_orig_port, ws_port))
         
         self.queue_thread = threading.Thread(target=self.pump_queue)
         self.queue_thread.start()
@@ -35,9 +37,21 @@ class LEDController(object):
     def get_queue(self):
         return self.queue
     
-    def remove_pattern(self, index):
+    def set_pattern_rep_count(self, entry_id, num_times):
         self.queue_lock.acquire()
-        self.queue.pop(index)
+        for i in range(len(self.queue)):
+            if id(self.queue[i]) == entry_id:
+                self.queue[i][2] = num_times
+                
+        self.queue_lock.release()
+    
+    def remove_pattern(self, entry_id):
+        self.queue_lock.acquire()
+        for i in range(len(self.queue)):
+            if id(self.queue[i]) == entry_id:
+                self.queue.pop(index)
+                break
+        
         if len(self.queue) == 0:
             self.queue_has_data.clear()
         self.queue_lock.release()
@@ -51,7 +65,7 @@ class LEDController(object):
     
     def add_pattern(self, pattern, num_times=-1, name='', async=True):
         self.queue_lock.acquire()
-        self.queue.append((name, pattern, num_times))
+        self.queue.append([name, pattern, num_times])
         self.queue_has_data.set()
         self.queue_lock.release()
         
@@ -188,6 +202,12 @@ class PatternWriter(multiprocessing.Process):
         raise SystemExit
 
 class WebsocketWriter(PatternWriter):
+    
+    def __init__(self, framerate, hostname, orig_port, port):
+        super(WebsocketWriter, self).__init__(framerate)
+        self.hostname = hostname
+        self.orig_port = orig_port
+        self.port = port
 
     def open_port(self):
         self.clients = []
@@ -228,11 +248,13 @@ class WebsocketWriter(PatternWriter):
                 "HTTP/1.1 101 Web Socket Protocol Handshake\r\n" + \
                 "Upgrade: WebSocket\r\n" + \
                 "Connection: Upgrade\r\n" + \
-                "Sec-WebSocket-Origin: http://localhost:5000\r\n" + \
-                "Sec-WebSocket-Location: ws://localhost:9999/\r\n" + \
+                "Sec-WebSocket-Origin: http://"+self.hostname+":"+ \
+                    str(self.orig_port)+"\r\n" + \
+                "Sec-WebSocket-Location: ws://"+self.hostname+":"+ \
+                    str(self.port)+"/\r\n" + \
                 "Sec-WebSocket-Protocol: ledweb\r\n\r\n" + \
                 respkey + "\r\n"
-            
+                        
             client.send(resp)
             self.clients_lock.acquire()
             self.clients.append(client)

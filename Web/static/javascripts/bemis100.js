@@ -47,7 +47,9 @@ function updateQueue() {
       var p = queue[i][0];
       var n = queue[i][1];
       qh += 
-        '<li><img src="/static/patterns/' + p + '"></li>';
+        '<li><img src="/static/patterns/' + p + '">' + 
+        
+        '</li>';
     }
     $('#queue ul').html(qh);
   })
