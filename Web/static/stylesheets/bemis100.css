@@ -112,9 +112,25 @@ div#patterns {
   );
 }
 
+div.pattern_folder {
+  clear: both;
+}
+
 div#patterns h2 {
   margin-left: 20px;
   margin-bottom: 0;
+}
+
+div#patterns h3 {
+  margin-left: 25px;
+  margin-bottom: 0;
+}
+
+div#patterns h2 a {
+  float: right;
+  margin-right: 10px;
+  color: #aaa;
+  font-size: 12pt;
 }
 
 div#patterns img {

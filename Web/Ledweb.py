@@ -26,22 +26,24 @@ class Home(object):
     def GET(self):
         
         def find_patterns(d):
-            l = os.listdir(d)
-            files = []
-            dirs = []
-            for e in l:
-                if os.path.isfile(os.path.join(d, e)):
-                    if re.match('^[^\.]+\.(gif|png|jpg|jpeg)$', e):
-                        files.append(e)
-                else:
-                    dirs.append(e)
+            patterns = []
+
+            for root, dirs, files in os.walk(d):
+                disp_root = os.path.relpath(root, d)
+                if disp_root == '.':
+                    disp_root = ''
+                p = []
+                for f in files:
+                    if re.match('^[^\.]+\.(gif|png|jpg|jpeg|tiff|bmp)$', f, re.I):
+                        p.append(os.path.join(disp_root, f))
+                patterns.append((disp_root, p))
             
-            if len(dirs) == 0:
-                return files
-            else:
-                return files.extend([find_patterns(os.path.join(d, sd)) for sd in dirs])
+            patterns[:1] = patterns[0][1]    # Don't return relpath for root dir
+            
+            return patterns
         
         patterns = find_patterns(config['pattern_dir'])
+        
         return render.home(patterns)
 
 class Play:

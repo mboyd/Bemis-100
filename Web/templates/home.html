@@ -3,8 +3,11 @@ $def with (patterns)
     def show_patterns(patterns):
         s = ''
         for e in patterns:
-            if type(e) is list:
-                s += show_patterns(e)
+            if type(e) is tuple:
+                s += '<div class="pattern_folder">' + \
+                        '<h3>' + e[0] + '</h3>' + \
+                        show_patterns(e[1]) + \
+                      '</div>'
             else:
                 s += show_pattern(e)
         return s
@@ -26,6 +29,10 @@ $def with (patterns)
       <a class='pause' href='#'>Pause</a> &nbsp;&nbsp;|&nbsp;&nbsp;
       <a class='next' href='#'>Next</a>
     </div>
+    <div id='status'>
+      <span id='connection'></span>&nbsp;&nbsp;
+      <span id='framerate'></span>
+    </div>
   </div>
   
   <div id='queue'>
@@ -35,7 +42,7 @@ $def with (patterns)
   </div>
   
   <div id='patterns'>
-  	<h2>Patterns</h2>
+  	<h2>Patterns <a href='#'>New Pattern</a></h2>
   	$:show_patterns(patterns)
   </div>
   
