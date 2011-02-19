@@ -46,49 +46,37 @@ class Bemis100Pattern:
     def __iter__(self):
         return iter(self.image_data)
 
+#
+# PWM Routines
+#
 
-def alt_encode_char(value):
-    """Return a sequence of boolean states for a pwm representation of the 8-bit
+PWM_BITS = 8
+PWM_BINS = PWM_BITS + 1
+PWM_CUTOFFS = [int(round(255.*i/(PWM_BINS))) for i in range(1, PWM_BINS+1)]
+PWM_VALS = [2**i-1 for i in range(PWM_BINS)]
+
+def encode_char(value):
+    return PWM_LOOKUP[value]
+
+def _encode_char(value):
+    """Return a bitmask for a pwm representation of the 8-bit
     integer value. Our firmware only implements 8 shades, so we indicate the
     brightness of a pixel by the number of 1s in an 8-bit string, which we
     transmit as a single character."""
     
-    # FIXME: Really?
-    
-    raw = reduce(lambda x,y: x+y,
-            map(lambda x: str(int(x)),
-                [value>=255*i/8. for i in range(1,9)]))
-    # raw = str(int(value>=255*1))+\
-            # str(int(value>=255*7/8))+\
-            # str(int(value>=255*6/8))+\
-            # str(int(value>=255*5/8))+\
-            # str(int(value>=255*4/8))+\
-            # str(int(value>=255*3/8))+\
-            # str(int(value>=255*2/8))+\
-            # str(int(value>=255*1/8))
-    return int(raw,2)
+    for i in range(PWM_BINS):
+        if value <= PWM_CUTOFFS[i]:
+            return PWM_VALS[i]
+    raise ValueError, "Pixel value %i out of range" % value
 
-def encode_char(c):
-    if c < 32:
-        return 0
-    elif c < 64:
-        return 128
-    elif c < 96:
-        return 192
-    elif c < 128:
-        return 224
-    elif c < 160:
-        return 240
-    elif c < 192:
-        return 248
-    elif c < 224:
-        return 252
-    elif c < 256:    
-        return 254
-    else:
-        raise ValueError, "Pixel value %i out of range" % c
+PWM_LOOKUP = [_encode_char(i) for i in range(256)]
 
 def decode_char(x):
     '''Undo the conversion from char values to bytes, in which the value is
     indicated by the number of 1s in the byte'''
-    return int(bin(x).count('1') * 255/8)
+    return PWM_DECODE_LOOKUP[x]
+
+PWM_DECODE_LOOKUP = {PWM_VALS[0] : 0}
+for i in range(1, PWM_BINS-1):
+    PWM_DECODE_LOOKUP[PWM_VALS[i]] = (PWM_CUTOFFS[i] - PWM_CUTOFFS[i-1]) / 2 + PWM_CUTOFFS[i-1]
+PWM_DECODE_LOOKUP[PWM_VALS[-1]] = 255
