@@ -78,5 +78,5 @@ def decode_char(x):
 
 PWM_DECODE_LOOKUP = {PWM_VALS[0] : 0}
 for i in range(1, PWM_BINS-1):
-    PWM_DECODE_LOOKUP[PWM_VALS[i]] = (PWM_CUTOFFS[i] - PWM_CUTOFFS[i-1]) / 2 + PWM_CUTOFFS[i-1]
+    PWM_DECODE_LOOKUP[PWM_VALS[i]] = int(round((PWM_CUTOFFS[i] - PWM_CUTOFFS[i-1]) / 2 + PWM_CUTOFFS[i-1]))
 PWM_DECODE_LOOKUP[PWM_VALS[-1]] = 255

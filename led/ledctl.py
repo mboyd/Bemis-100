@@ -261,20 +261,28 @@ class WebsocketWriter(PatternWriter):
             self.clients_lock.release()
     
     def draw_frame(self, frame):
-        json_frame = '{"status":"ok", "frame" : ['
-        for i in range(0, len(frame), 3):
-            r, g, b = map(pattern.decode_char, frame[i:i+3])
-            json_frame += '"rgb(%i,%i,%i)",' % (r, g, b)
-        json_frame = json_frame[:-1] + ']}'
+        json_frame = ['{"status":"ok", "frame" : [']
         
-        self.client_push(json_frame)
+        for i in range(0, len(frame)-3, 3):
+            r, g, b = map(pattern.decode_char, frame[i:i+3])
+            json_frame.append('"rgb('+str(r)+','+str(g)+','+str(b)+')",')
+        
+        r, g, b = map(pattern.decode_char, frame[-3:])
+        json_frame.append('"rgb('+str(r)+','+str(g)+','+str(b)+')"')
+        json_frame.append(']}')
+        # Fast string concatenation trick
+        json_data = ''.join(json_frame)
+        
+        self.client_push(json_data)
         
     def client_push(self, data):
         self.clients_lock.acquire()
         dead_clients = []
         for i in range(len(self.clients)):
             try:
-                self.clients[i].send("\x00"+data+"\xff")
+                self.clients[i].send("\x00")
+                self.clients[i].send(data)
+                self.clients[i].send("\xff")
             except socket.error:
                 dead_clients.append(i)
         
