@@ -10,6 +10,7 @@ from app_globals import bemis100, config, jsonify
 from led.bemis100 import Bemis100
 from led.pattern import Bemis100Pattern
 from led.beat import BeatPatternRMS, BeatPattern
+from led.graphEq import GraphEqPattern
 
 urls = ('/', 'Home',
         '/play', 'Play',
@@ -55,14 +56,21 @@ class Play:
             format_json = False
         
         params = web.input()
-        if 'pattern' in params or 'beatpattern' in params:
+        if 'pattern' in params or 'beatpattern' in params \
+                or 'grapheqpattern' in params:
             try:
                 if 'pattern' in params:
                     pattern_name = params['pattern']
                     track_beat = 'beat' in params
-                else:
+                    graph_eq = False
+                elif 'beatpattern' in params:
                     pattern_name = params['beatpattern']
                     track_beat = True
+                    graph_eq = False
+                elif 'grapheqpattern' in params:
+                    pattern_name = params['grapheqpattern']
+                    track_beat = False
+                    graph_eq = True
                 
                 pattern_file = os.path.join(config['pattern_dir'], pattern_name)
                 
@@ -70,6 +78,8 @@ class Play:
                 
                 if track_beat:
                     p = BeatPattern(p)
+                elif graph_eq:
+                    p = GraphEqPattern(p)
                 
                 if 'num_times' in params:
                     n = int(params['num_times'])
