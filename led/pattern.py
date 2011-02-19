@@ -47,7 +47,7 @@ class Bemis100Pattern:
         return iter(self.image_data)
 
 
-def encode_char(value):
+def alt_encode_char(value):
     """Return a sequence of boolean states for a pwm representation of the 8-bit
     integer value. Our firmware only implements 8 shades, so we indicate the
     brightness of a pixel by the number of 1s in an 8-bit string, which we
@@ -67,6 +67,26 @@ def encode_char(value):
             # str(int(value>=255*2/8))+\
             # str(int(value>=255*1/8))
     return int(raw,2)
+
+def encode_char(c):
+    if c < 32:
+        return 0
+    elif c < 64:
+        return 128
+    elif c < 96:
+        return 192
+    elif c < 128:
+        return 224
+    elif c < 160:
+        return 240
+    elif c < 192:
+        return 248
+    elif c < 224:
+        return 252
+    elif c < 256:    
+        return 254
+    else:
+        raise ValueError, "Pixel value %i out of range" % c
 
 def decode_char(x):
     '''Undo the conversion from char values to bytes, in which the value is
