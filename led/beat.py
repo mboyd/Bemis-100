@@ -8,8 +8,6 @@ import sys
 import numpy as np
 import sys, os
 from multiprocessing import Process, Lock, Pipe
-from multiprocessing.sharedctypes import Value, Array
-from ctypes import Structure, c_byte, c_double
 import pattern
 
 CHUNK = 512
@@ -109,7 +107,8 @@ class BeatPattern:
         while self.parent_conn.poll():
             self.data = self.parent_conn.recv()
         c = data_to_rfft(self.data)
-        self.val = rfft_to_val(c,freq_range=FREQ_RANGE,gain=GAIN)
+        self.val = rfft_to_val(c,freq_range=FREQ_RANGE,gain=GAIN,
+                block_size=self.chunk)
         self.val = min(self.val,self.target_width/2-9)
         self.bar_pos = max(self.val,self.bar_pos-(self.bar_pos-self.val)*self.bar_decay)
 
