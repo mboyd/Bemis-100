@@ -64,7 +64,7 @@ class BeatPattern:
         self.parent_conn, child_conn = Pipe(duplex=False)
 
         proc = Process(target = listen, args=(self.chunk,child_conn))
-        # proc.daemonic = True
+        proc.daemonic = True
         proc.start()
         # self.listener = Listener(self.chunk)
         # self.listener.start()
