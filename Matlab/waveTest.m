@@ -6,8 +6,10 @@ acc = zeros(100,1);
 % Initial configuration
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-T = .01; % "Tension" 
-decay = 0.0008; % fraction of velocity lost per tick
+T = .1; % "Tension" 
+mu = 1; % "mass per length"
+friction = 0.01; % frictional force per velocity
+dt = .1;
 
 % Full sine wave 
 % for i=1:100
@@ -27,9 +29,12 @@ decay = 0.0008; % fraction of velocity lost per tick
 % Impulse, center
 % pos(50) = 1;
 
-% Impulse, end
+% Impulse, ends
 for i = 2:10
-    pos(i) = 1;
+    pos(i) = sin((i-2)*pi/8);
+end
+for i = 91:99
+    pos(i) = sin((i-91)*pi/8);
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -47,18 +52,18 @@ while 1
     ylim([-1,1]);
     subplot 212
     plot(abs(pos))
-    ylim([0,1])
-    pause(0.001);
+    ylim([-1,1])
+    pause(0.0001);
     for i = 2:99
-        acc(i) = ((pos(i+1)-pos(i))-(pos(i)-pos(i-1)))*T;
+        acc(i) = ((pos(i+1)-2*pos(i)+pos(i-1))*T-friction*vel(i))/mu;
     end
 
     for i = 2:99
-        vel(i) = (vel(i) + acc(i))*(1-decay);
+        vel(i) = (vel(i) + acc(i)*dt);
     end
 
     for i = 2:99
-        pos(i) = pos(i) + vel(i);
+        pos(i) = pos(i) + vel(i)*dt;
     end
     
 end
