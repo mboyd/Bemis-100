@@ -1,0 +1,46 @@
+pos = zeros(100,1);
+vel = zeros(100,1);
+acc = zeros(100,1);
+
+
+% Full sine wave 
+% for i=1:100
+%     pos(i) = sin((i-1)*2*pi/99);
+% end
+
+% Half sine wave 
+% for i=1:100
+%     pos(i) = sin((i-1)*pi/99);
+% end
+
+% 
+% for i = 40:60
+%     pos(i) = 1;
+% end
+
+T = .01;
+decay = 0.0008;
+
+figure
+
+while 1
+    plot(pos)
+    ylim([-1,1]);
+    pause(0.001);
+    for i = 2:99
+        acc(i) = ((pos(i+1)-pos(i))-(pos(i)-pos(i-1)))*T;
+    end
+
+    for i = 2:99
+        vel(i) = (vel(i) + acc(i))*(1-decay);
+    end
+
+    for i = 2:99
+        pos(i) = pos(i) + vel(i);
+    end
+    
+end
+
+
+
+    
