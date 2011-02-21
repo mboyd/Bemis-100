@@ -1,9 +1,6 @@
 from __future__ import division
 
-""" Record a few seconds of audio and save to a WAVE file. """
-
 import pyaudio
-import wave
 import sys
 import numpy as np
 import sys, os

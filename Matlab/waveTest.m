@@ -12,9 +12,9 @@ friction = 0.01; % frictional force per velocity
 dt = .1;
 
 % Full sine wave 
-% for i=1:100
-%     pos(i) = sin((i-1)*2*pi/99);
-% end
+for i=1:100
+    pos(i) = sin((i-1)*2*pi/99);
+end
 
 % Half sine wave 
 % for i=1:100
@@ -30,12 +30,12 @@ dt = .1;
 % pos(50) = 1;
 
 % Impulse, ends
-for i = 2:10
-    pos(i) = sin((i-2)*pi/8);
-end
-for i = 91:99
-    pos(i) = sin((i-91)*pi/8);
-end
+% for i = 2:10
+%     pos(i) = sin((i-2)*pi/8);
+% end
+% for i = 91:99
+%     pos(i) = sin((i-91)*pi/8);
+% end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Run and Plot

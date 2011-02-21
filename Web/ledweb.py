@@ -11,6 +11,7 @@ from led.bemis100 import Bemis100
 from led.pattern import Bemis100Pattern
 from led.beat import BeatPatternRMS, BeatPattern
 from led.graphEq import GraphEqPattern
+from led.wave import WavePattern
 
 urls = ('/', 'Home',
         '/play', 'Play',
@@ -74,7 +75,8 @@ class Play:
                 
                 pattern_file = os.path.join(config['pattern_dir'], pattern_name)
                 
-                p = Bemis100Pattern(pattern_file, config['num_boards'])
+                # p = Bemis100Pattern(pattern_file, config['num_boards'])
+                p = WavePattern(config['num_boards'])
                 
                 if track_beat:
                     p = BeatPattern(p)
