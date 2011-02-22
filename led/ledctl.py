@@ -118,6 +118,7 @@ class LEDController(object):
             if (num_times > 0 and count == num_times):
                 break
             
+            row_start = time.time()
             for frame in pattern:
                 self.assert_writers_alive()
                 
@@ -127,9 +128,7 @@ class LEDController(object):
                 if self._next.is_set():
                     self._next.clear()
                     return
-                
-                row_start = time.time()
-                
+                                
                 self.draw_frame(frame)
                 
                 dt = time.time() - row_start
@@ -137,6 +136,8 @@ class LEDController(object):
                     time.sleep(self.frame_dt - dt)
                 else:
                     print 'Draw slow by %f sec' % (dt-self.frame_dt)
+                
+                row_start = time.time()
                 
             count += 1
     
@@ -265,11 +266,10 @@ class WebsocketWriter(PatternWriter):
         
         for i in range(0, len(frame)-3, 3):
             r, g, b = map(pattern.decode_char, frame[i:i+3])
-            json_frame.append('"rgb('+str(r)+','+str(g)+','+str(b)+')",')
+            json_frame.extend(['"rgb(',str(r),',',str(g),',',str(b),')",'])
         
         r, g, b = map(pattern.decode_char, frame[-3:])
-        json_frame.append('"rgb('+str(r)+','+str(g)+','+str(b)+')"')
-        json_frame.append(']}')
+        json_frame.extend(['"rgb(',str(r),',',str(g),',',str(b),')"]}'])
         # Fast string concatenation trick
         json_data = ''.join(json_frame)
         
