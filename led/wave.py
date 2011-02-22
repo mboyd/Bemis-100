@@ -4,7 +4,7 @@ from multiprocessing import Process, Pipe
 import pattern
 import numpy as np
 
-T = .1; # "Tension" 
+T = .5; # "Tension" 
 mu = 1; # "mass per length"
 friction = 0; # frictional force per velocity
 dt = .1;
@@ -15,11 +15,9 @@ class WavePattern:
         self.pos = np.zeros(self.pixels)
         self.vel = np.zeros(self.pixels)
         self.acc = np.zeros(self.pixels)
+        self.out = np.zeros(self.pixels*3)
 
     def get_line(self):
-        self.pos[0] = 0
-        self.pos[len(self.pos)-1] = 0
-        
         for i in range(1,self.pixels-2):
             self.acc[i] = ((self.pos[i+1]-2*self.pos[i]+\
                     self.pos[i-1])*T-friction*self.vel[i])/mu;
@@ -30,20 +28,18 @@ class WavePattern:
         for i in range(1,self.pixels-2):
             self.pos[i] = self.pos[i] + self.vel[i]*dt;
 
-        out = np.zeros((self.pixels,3))
-        for i in range(len(out)):
+        for i in range(self.pixels):
             # new_point = abs(self.data[i])
-            new_point = self.pos[i]
-            if new_point > 1:
-                new_point = 1
-            if new_point < -1:
-                new_point = -1
-            if new_point > 0:
-                out[i] = [0,0,new_point*255]
-            if new_point < 0:
-                out[i] = [-new_point*255,0,0]
-        out = np.reshape(out,(-1))
-        return bytearray([pattern.encode_char(c) for c in out])
+            self.new_point = self.pos[i]
+            if self.new_point > 1:
+                self.new_point = 1
+            if self.new_point < -1:
+                self.new_point = -1
+            if self.new_point > 0:
+                self.out[i*3:i*3+3] = [0,0,self.new_point*255]
+            if self.new_point < 0:
+                self.out[i*3:i*3+3] = [-self.new_point*255,0,0]
+        return bytearray((pattern.encode_char(c) for c in self.out))
 
     def __iter__(self):
         start_data = np.array(\
