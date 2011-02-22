@@ -4,10 +4,10 @@ from multiprocessing import Process, Pipe
 import pattern
 import numpy as np
 
-T = .5; # "Tension" 
+T = 1; # "Tension" 
 mu = 1; # "mass per length"
 friction = 0; # frictional force per velocity
-dt = .1;
+dt = .5;
 
 class WavePattern:
     def __init__(self,num_boards = 83):
@@ -33,20 +33,33 @@ class WavePattern:
             self.new_point = self.pos[i]
             if self.new_point > 1:
                 self.new_point = 1
-            if self.new_point < -1:
+            elif self.new_point < -1:
                 self.new_point = -1
             if self.new_point > 0:
-                self.out[i*3:i*3+3] = [0,0,self.new_point*255]
-            if self.new_point < 0:
-                self.out[i*3:i*3+3] = [-self.new_point*255,0,0]
+                self.out[i*3] = 0
+                self.out[i*3+1] = 0
+                self.out[i*3+2] = self.new_point*255
+            elif self.new_point < 0:
+                self.out[i*3] = -self.new_point*255
+                self.out[i*3+1] = 0
+                self.out[i*3+2] = 0
+            else:
+                self.out[i*3] = 0
+                self.out[i*3+1] = 0
+                self.out[i*3+2] = 0
         return bytearray((pattern.encode_char(c) for c in self.out))
 
     def __iter__(self):
+        # start_data = np.array(\
+                # [0]+\
+                # [0]*np.floor(self.pixels/2-31)+\
+                # [1]*60+\
+                # [0]*np.ceil(self.pixels/2-31)+\
+                # [0])
         start_data = np.array(\
                 [0]+\
-                [0]*np.floor(self.pixels/2-11)+\
                 [1]*20+\
-                [0]*np.ceil(self.pixels/2-11)+\
+                [0]*int(self.pixels-22)+\
                 [0])
 
         # start_data = np.zeros(self.num_boards*2)
