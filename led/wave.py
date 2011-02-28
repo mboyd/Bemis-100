@@ -6,7 +6,7 @@ import numpy as np
 
 T = 1; # "Tension" 
 mu = 1; # "mass per length"
-friction = 0; # frictional force per velocity
+friction = 0.01; # frictional force per velocity
 dt = .5;
 
 class WavePattern:
@@ -65,17 +65,17 @@ class WavePattern:
         return bytearray((pattern.encode_char(c) for c in self.out))
 
     def __iter__(self):
-        # start_data = np.array(\
-                # [0]+\
-                # [0]*np.floor(self.pixels/2-31)+\
-                # [1]*60+\
-                # [0]*np.ceil(self.pixels/2-31)+\
-                # [0])
         start_data = np.array(\
                 [0]+\
-                [1]*20+\
-                [0]*int(self.pixels-22)+\
+                [0]*np.floor(self.pixels/2-31)+\
+                [1]*60+\
+                [0]*np.ceil(self.pixels/2-31)+\
                 [0])
+        # start_data = np.array(\
+                # [0]+\
+                # [1]*20+\
+                # [0]*int(self.pixels-22)+\
+                # [0])
 
         # start_data = np.zeros(self.num_boards*2)
         # for i in range(len(start_data)):
