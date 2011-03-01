@@ -1,7 +1,6 @@
 from __future__ import division
 
 import pyaudio
-import sys
 import numpy as np
 import sys, os
 from multiprocessing import Process, Lock, Pipe
@@ -35,12 +34,9 @@ def rfft_to_val(c,freq_range = [0,10000],gain = 255/750000,
     freq_cutoffs = np.array(freq_range)
     fft_cutoffs = freq_cutoffs * block_size/sample_rate
     x = sum([abs(j) for j in c[1:fft_cutoffs[1]]])
-    if x <= 0:
+    if x < 0:
         x = 0
-    val = x
-    if val < 0:
-        val = 0
-    return int(val*gain)
+    return int(x*gain)
 
 def data_to_rfft(data):
     return np.fft.rfft([ord(i) for i in data])

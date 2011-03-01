@@ -80,14 +80,15 @@ void push(uint8_t c) {
 	uint8_t i;
 	for (i = 0; i<8; i++) {
 		PORTA = (c>>i)&1;
-		PORTA |= 2;
-		PORTA &=~2;
+		PORTA = 2;
+		PORTA = 0; //&=~2;
 	}
+	// Assuming loop unrolling, 8 * (3+1+1) = 40 cycles
 }
 
 void latch_out() {
-	PORTA |= 4;
-	PORTA &=~4;
+	PORTA = 4;
+	PORTA = 0; //&=~4;
 }
 
 ISR(USART0_RX_vect) {	//USART_RX for atmega48
@@ -101,14 +102,14 @@ ISR(USART0_RX_vect) {	//USART_RX for atmega48
 }
 
 int main(void) {
-	int i, j;
-	uint8_t pwm_index;
+	register uint8_t i, j;
+	register uint8_t pwm_index;
 	
-	uint8_t lred, lgreen, lblue;
-	uint8_t hred, hgreen, hblue;
+	register uint8_t lred, lgreen, lblue;
+	register uint8_t hred, hgreen, hblue;
 	
-	uint8_t ln, hn;
-	uint8_t b;
+	register uint8_t ln, hn;
+	register uint8_t b;
 	
 	PORTA = 0;
 	DDRA = 0x07;			//output on C0, clock on C1, C2 is output latch
@@ -123,35 +124,44 @@ int main(void) {
 		_delay_ms(700);
 	}
 	
-	while (1) {
-		pwm_index = 0;
-		for (pwm_index = 0; pwm_index < 8; pwm_index++){
-			for (i = NUM_BOARDS*6-6; i >= 0; i-=6) {
-				// Onboard
-				hred = frame[i];
-				hgreen = frame[i+1];
-				hblue = frame[i+2];
-				// Slave
-				lred = frame[i+3];
-				lgreen = frame[i+4];
-				lblue = frame[i+5];
-				
-				b = pwm_interleave[pwm_index];
-				
-				ln = (lred&bitmask[b]) ? RED_MASK : 0;
-				ln |= (lgreen&bitmask[b]) ? GREEN_MASK : 0;
-				ln |= (lblue&bitmask[b]) ? BLUE_MASK : 0;
-				
-				hn = (hred&bitmask[b]) ? RED_MASK : 0;
-				hn |= (hgreen&bitmask[b]) ? GREEN_MASK : 0;
-				hn |= (hblue&bitmask[b]) ? BLUE_MASK : 0;
-				
-				b = hn<<4 | ln;
-				
-				push(b);
-			}
-			latch_out();
+	pwm_index = 0;
+	
+	for (;;) {
+		pwm_index += 32;
+		pwm_index %= 256;
+		
+		for (i = NUM_BOARDS*6-6; i >= 0; i-=6) {
+			// Onboard
+			hred = frame[i];
+			hgreen = frame[i+1];
+			hblue = frame[i+2];
+			// Slave
+			lred = frame[i+3];
+			lgreen = frame[i+4];
+			lblue = frame[i+5];
+			// 5 adds + 6 ram hits @ 2 cycles each => 17 cycles
+			
+			ln = (lred > pwm_index) ? RED_MASK : 0;
+			ln |= (lgreen > pwm_index) ? GREEN_MASK : 0;
+			ln |= (lblue > pwm_index) ? BLUE_MASK : 0;
+			
+			hn = (hred > pwm_index) ? RED_MASK : 0;
+			hn |= (hgreen > pwm_index) ? GREEN_MASK : 0;
+			hn |= (hblue > pwm_index) ? BLUE_MASK : 0;
+			
+			b = hn<<4 | ln;
+			// 2 * (3+4+4) + 3 = 25 cycles
+			
+			push(b);
+			// 40 cycles IO
 		}
+			// Total: approx 80 cycles / board
+			// 83*80 = 6640 cycles / pwm frame
+			// 12MHz / 6640 = 1807 Hz PWM
+		
+		latch_out();
 	}
+	
+	return 0;
 }
 
