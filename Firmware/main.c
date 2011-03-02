@@ -84,7 +84,7 @@ ISR(USART0_RX_vect) {	//USART_RX for atmega48
 }
 
 int main(void) {
-	register uint8_t i, j;
+	register uint16_t i, j;
 	register uint8_t pwm_index;
 	
 	register uint8_t lred, lgreen, lblue;
