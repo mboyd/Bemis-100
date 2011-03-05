@@ -52,11 +52,11 @@ class Bemis100Pattern:
 
 PWM_BITS = 8
 PWM_BINS = PWM_BITS + 1
-PWM_CUTOFFS = [int(round(255.*i/(PWM_BINS))) for i in range(1, PWM_BINS+1)]
+PWM_CUTOFFS = [int(255.*i/(PWM_BINS)) for i in range(1, PWM_BINS+1)]
 PWM_VALS = [2**i-1 for i in range(PWM_BINS)]
 
 def encode_char(value):
-    return PWM_LOOKUP[int(value)]
+    return PWM_LOOKUP[value]
 
 def _encode_char(value):
     """Return a bitmask for a pwm representation of the 8-bit
@@ -74,7 +74,7 @@ PWM_LOOKUP = [_encode_char(i) for i in range(256)]
 def decode_char(x):
     '''Undo the conversion from char values to bytes, in which the value is
     indicated by the number of 1s in the byte'''
-    return PWM_DECODE_LOOKUP[x]
+    return x
 
 PWM_DECODE_LOOKUP = {PWM_VALS[0] : 0}
 for i in range(1, PWM_BINS-1):

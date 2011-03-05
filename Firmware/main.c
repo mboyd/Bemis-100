@@ -19,7 +19,7 @@
 #define PWM_LEN 16
 /* const uint8_t pwm_interleave[PWM_LEN] = {0, 4, 1, 5, 2, 6, 3, 7}; */
 
-static const uint8_t pwm_interleave[PWM_LEN] = {8, 136,  72, 200,  40, 168, 104, 232,  24, 152,  88, 216,  56, 184, 120, 248};
+uint8_t pwm_interleave[PWM_LEN] = {8, 136,  72, 200,  40, 168, 104, 232,  24, 152,  88, 216,  56, 184, 120, 248};
 
 /* const uint8_t bitmask[8] = {0x1, 0x2, 0x4, 0x8, 0x10, 0x20, 0x40, 0x80}; */
 
@@ -84,7 +84,7 @@ ISR(USART0_RX_vect) {	//USART_RX for atmega48
 }
 
 int main(void) {
-	register uint16_t i, j;
+	register int16_t i, j;
 	register uint8_t pwm_index;
 	
 	register uint8_t lred, lgreen, lblue;
