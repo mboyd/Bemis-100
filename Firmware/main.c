@@ -62,8 +62,8 @@ void push(uint8_t c) {
 	uint8_t i;
 	for (i = 0; i<8; i++) {
 		PORTA = (c>>i)&1;
-		PORTA = 2;
-		PORTA = 0; //&=~2;
+		PORTA |= 2; //1;
+		PORTA &=~2; //0;
 	}
 	// Assuming loop unrolling, 8 * (3+1+1) = 40 cycles
 }
