@@ -1,0 +1,11 @@
+x = linspace(0,100);
+a = sin(pi*x/100);
+
+
+A = fft(a);
+
+for i = 1:length(A)
+    A(i) = A(i);
+end
+plot(ifft(A),'o')
+    x
