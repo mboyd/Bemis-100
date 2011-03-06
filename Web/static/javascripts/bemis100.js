@@ -47,7 +47,19 @@ $(document).ready(function() {
     evt.preventDefault();
     
     var p = evt.target.getAttribute('data-pattern');
-    $.getJSON('/play', {pattern: p}, function(result) {
+    
+    var track_beat = $('#pattern_config input[name=beat_tracking]').is(':checked');
+    
+    params = {pattern: p};
+    if (track_beat) {
+      params.beat = true;
+    }
+    
+    $('#play_pause').removeClass('pause');
+    $('#play_pause').addClass('play');
+    $('#play_pause').html('Play');
+    
+    $.getJSON('/play', params, function(result) {
       updateQueue();
     });
   });
