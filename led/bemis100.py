@@ -11,7 +11,7 @@ class Bemis100(ledctl.LEDController):
         
         self.num_boards = num_boards
         if not device == 'sim':
-            self.add_writer(Bemis100Writer(self.writer_done, device, num_boards, framerate))
+            self.add_writer(Bemis100Writer(device, num_boards, framerate))
 
 class Bemis100Writer(ledctl.PatternWriter):
     
@@ -43,5 +43,5 @@ class Bemis100Writer(ledctl.PatternWriter):
     def blank(self):
         '''Turn off all the LEDs. We do this before startup to make sure the
         power supplies are not loaded by the LEDs when they come online.'''
-        f = [bytearray("\x00\x00\x00"*self.num_boards*2)]
+        f = bytearray("\x00\x00\x00"*self.num_boards*2)
         self.draw_frame(f)

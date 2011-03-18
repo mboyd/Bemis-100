@@ -75,8 +75,8 @@ class Play:
                 
                 pattern_file = os.path.join(config['pattern_dir'], pattern_name)
                 
-                # p = Bemis100Pattern(pattern_file, config['num_boards'])
-                p = WavePattern(config['num_boards'])
+                p = Bemis100Pattern(pattern_file, config['num_boards'])
+                # p = WavePattern(config['num_boards'])
                 
                 if track_beat:
                     p = BeatPattern(p)
