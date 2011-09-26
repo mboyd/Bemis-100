@@ -24,7 +24,8 @@ class Bemis100Writer(ledctl.PatternWriter):
     
     def open_port(self):
         self.port = serial.Serial(port=self.device,
-                baudrate=230400,
+                # baudrate=230400,
+                baudrate=115200,
                 bytesize=serial.EIGHTBITS,
                 stopbits=serial.STOPBITS_ONE,
                 parity=serial.PARITY_NONE,

@@ -8,7 +8,9 @@ config = {'pattern_dir' : 'static/patterns',
             'num_boards' : 83,
             'framerate' : 30}
 
-bemis100 = Bemis100('/dev/tty.usbserial', num_boards=83, \
+# bemis100 = Bemis100('/dev/tty.usbserial', num_boards=83, \
+        # framerate=30)
+bemis100 = Bemis100('/dev/tty.usbmodemfd141', num_boards=83, \
         framerate=30)
 
 def jsonify(f):

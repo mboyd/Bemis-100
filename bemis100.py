@@ -1,7 +1,7 @@
 #!/usr/bin/env python2.6
 from __future__ import division
 
-from led import bemis100, pattern, beat, spectrogram, ledctl
+from led import bemis100, pattern,ledctl #, spectrogram,  beat, 
 import optparse, sys, os
 
 if __name__ == '__main__':
@@ -43,7 +43,7 @@ if __name__ == '__main__':
 
     if not options.sim:
         if options.device == '':
-            devices = filter(os.path.exists, ['/dev/tty.usbserial', '/dev/ttyUSB0'])
+            devices = filter(os.path.exists, ['/dev/tty.usbserial', '/dev/ttyUSB0', '/dev/tty.usbmodemfd141'])
             if len(devices) > 0:
                 options.device = devices[0]
 
