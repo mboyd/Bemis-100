@@ -1,7 +1,7 @@
 #!/usr/bin/env python2.6
 from __future__ import division
 
-from led import bemis100, pattern,ledctl #, spectrogram,  beat, 
+from led import bemis100, pattern, ledctl, ge #, spectrogram,  beat, 
 import optparse, sys, os
 
 if __name__ == '__main__':
@@ -46,8 +46,8 @@ if __name__ == '__main__':
             devices = filter(os.path.exists, ['/dev/tty.usbserial', '/dev/ttyUSB0', '/dev/tty.usbmodemfd141'])
             if len(devices) > 0:
                 options.device = devices[0]
-
-        b = bemis100.Bemis100(options.device, options.num_boards, options.framerate)
+        b = ge.GEController(options.device, options.num_boards, options.framerate)
+#         b = bemis100.Bemis100(options.device, options.num_boards, options.framerate)
     else:
         b = ledctl.LEDController(options.num_boards, options.framerate)
         

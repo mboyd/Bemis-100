@@ -8,9 +8,10 @@ sys.path.append('..')
 from app_globals import bemis100, config, jsonify
 
 from led.bemis100 import Bemis100
+from led.ge import GEController
 from led.pattern import Bemis100Pattern
-from led.beat import BeatPatternRMS, BeatPattern
-from led.graphEq import GraphEqPattern
+# from led.beat import BeatPatternRMS, BeatPattern
+# from led.graphEq import GraphEqPattern
 from led.wave import WavePattern
 
 urls = ('/', 'Home',
