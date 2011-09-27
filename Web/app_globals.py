@@ -6,7 +6,7 @@ from led.ge import GEController
 
 config = {'pattern_dir' : 'static/patterns',
             'device' : 'sim',
-            'num_boards' : 83,
+            'num_boards' : 25,
             'framerate' : 30}
 # 
 # bemis100 = Bemis100('/dev/tty.usbserial', num_boards=83, \

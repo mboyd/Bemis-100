@@ -5,7 +5,7 @@ import serial
 import time
 
 class GEController(ledctl.LEDController):
-    def __init__(self, device, framerate=20, num_boards=50, start_websocket=False):
+    def __init__(self, device, framerate=20, num_boards=50, start_websocket=True):
         super(GEController, self).__init__(device, framerate=framerate, 
                                     start_websocket=start_websocket)
         
@@ -40,13 +40,11 @@ class GEWriter(ledctl.PatternWriter):
         self.port.write('B')
         for i in range(len(frame)):
             self.port.write(frame[3*i:3*i + 3])
-            time.sleep(.001) #give the controller enough time to write the new data
+            time.sleep(.0009) #give the controller enough time to write the new data
  
     def blank(self):
         '''Turn off all the LEDs. We do this before startup to make sure the
         power supplies are not loaded by the LEDs when they come online.'''
         f = bytearray("\x00\x00\x00"*self.num_boards)
         self.draw_frame(f)
-    def wait_for_finish(self):
-        while True:
-            pass
+ 
