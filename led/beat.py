@@ -12,7 +12,8 @@ CHANNELS = 1
 RATE = 44100
 BAR_PATTERN = [255,0,0]
 FREQ_RANGE = [0,200] # Hz 
-GAIN = 0.0035
+# GAIN = 0.0035
+GAIN = 0.002
 RMS_GAIN = 50000 # gain
 RMS_CHUNK = 512               
 
@@ -90,7 +91,7 @@ class BeatPattern:
 
         averaged_out = self.out*0.75+self.last_out*0.25
         self.last_out = self.out
-        return bytearray(averaged_out) 
+        return bytearray([int(c) for c in averaged_out]) 
 
     def update_val(self):
         # print '\n\n'
