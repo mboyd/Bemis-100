@@ -1,7 +1,7 @@
 #!/usr/bin/env python2.6
 from __future__ import division
 
-from led import bemis100, pattern, ledctl, ge, spectrogram, beat, 
+from led import bemis100, pattern, ledctl, ge, spectrogram, beat 
 import optparse, sys, os
 
 if __name__ == '__main__':

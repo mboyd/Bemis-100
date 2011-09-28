@@ -1,7 +1,6 @@
 #!/usr/bin/env python2.6
 from __future__ import division
 
-import pattern
 import multiprocessing, threading, time, socket, re, struct, hashlib, copy
 
 class LEDController(object):
@@ -182,7 +181,7 @@ class PatternWriter(multiprocessing.Process):
             while True:
                 frame = self.pipe_in.recv()
                 
-                if pattern is None:
+                if frame is None:
                     raise SystemExit
                 
                 self.draw_frame(frame)
@@ -265,10 +264,10 @@ class WebsocketWriter(PatternWriter):
         json_frame = ['{"status":"ok", "frame" : [']
         
         for i in range(0, len(frame)-3, 3):
-            r, g, b = map(pattern.decode_char, frame[i:i+3])
+            r, g, b = frame[i:i+3]
             json_frame.extend(['"rgb(',str(r),',',str(g),',',str(b),')",'])
         
-        r, g, b = map(pattern.decode_char, frame[-3:])
+        r, g, b = frame[-3:]
         json_frame.extend(['"rgb(',str(r),',',str(g),',',str(b),')"]}'])
         # Fast string concatenation trick
         json_data = ''.join(json_frame)

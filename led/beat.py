@@ -90,7 +90,7 @@ class BeatPattern:
 
         averaged_out = self.out*0.75+self.last_out*0.25
         self.last_out = self.out
-        return bytearray([pattern.encode_char(c) for c in averaged_out]) 
+        return bytearray(averaged_out) 
 
     def update_val(self):
         # print '\n\n'

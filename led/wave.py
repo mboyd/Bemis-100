@@ -62,7 +62,7 @@ class WavePattern:
                 self.out[i*3+1] = 0
                 self.out[i*3+2] = 0
             # self.out[i*3:i*3+3] = self.new_data
-        return bytearray((pattern.encode_char(c) for c in self.out))
+        return bytearray(self.out)
 
     def __iter__(self):
         start_data = np.array(\

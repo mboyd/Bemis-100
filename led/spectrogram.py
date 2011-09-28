@@ -7,7 +7,7 @@ import pyaudio
 import numpy as np
 import sys, os
 from threading import Thread
-from pattern import encode_char as output_char
+# from pattern import encode_char as output_char
 from beat import data_to_rfft
 from beat import rfft_to_val
 
@@ -50,7 +50,7 @@ def rfft_to_rgb(c,last_val, block_size = 2048, sample_rate = RATE):
             if x < 20:
                 out[i] = 0
             else:
-                out[i] = output_char(np.log(x) * 100)
+                out[i] = np.log(x) * 100
     return out
 
 
@@ -76,7 +76,7 @@ class SpectrogramPattern:
         blue_val = rfft_to_val(data_to_rfft(data),
                                freq_range=[0,10000],gain=255/1000000)
         self.row = np.roll(self.row,3)
-        self.row.put([0,1,2],[output_char(red_val),0,output_char(blue_val)])
+        self.row.put([0,1,2],[red_val,0,blue_val])
         return bytearray(self.row)
 
     def __iter__(self):
