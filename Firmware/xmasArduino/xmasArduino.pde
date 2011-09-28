@@ -136,35 +136,31 @@ xmas_end() {
       }  
  }  
 
-uint8_t fake_chars[] = {'B', 255, 255,  0};
-uint8_t light_addr = 0;
 uint8_t color_index = 0;
-uint8_t current_frame[] = {0, 0, 0};
+uint8_t current_frame[] = {0, 0, 0, 0};
 
 void handle_char(uint8_t c) {
-    if (c == 'B') {
-        light_addr = 0;
-        color_index = 0;
-    }
-    else {
+    /* if (c == 'B') {*/
+    /*     color_index = 0;*/
+    /* }*/
+    /* else {*/
         current_frame[color_index] = c;
         color_index++;
-        if (color_index == 3) {
-            xmas_set_color(light_addr, 127, xmas_color(current_frame[0]>>4, 
-                            current_frame[1]>>4, current_frame[2]>>4));
+        if (color_index == 4) {
+            xmas_set_color(current_frame[0], 127, xmas_color(current_frame[1]>>4, 
+                            current_frame[2]>>4, current_frame[3]>>4));
             color_index = 0;
-            light_addr++;
         }
-    }
+    /* }*/
 }
    
 void setup()  
 {  
     xmas_fill_color(0,XMAS_LIGHT_COUNT,XMAS_DEFAULT_INTENSITY,XMAS_COLOR_BLACK); //Enumerate all the lights  
     Serial.begin(115200);
-    xmas_set_color(40, 127, XMAS_COLOR_RED);
-    xmas_set_color(41, 127, XMAS_COLOR_BLUE);
-    xmas_set_color(42, 127, XMAS_COLOR_GREEN);
+    /* xmas_set_color(40, 127, XMAS_COLOR_RED);*/
+    /* xmas_set_color(41, 127, XMAS_COLOR_BLUE);*/
+    /* xmas_set_color(42, 127, XMAS_COLOR_GREEN);*/
 }  
  
    

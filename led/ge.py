@@ -21,6 +21,7 @@ class GEWriter(ledctl.PatternWriter):
         self.device = device
         self.port = None
         self.num_boards = num_boards
+        self.last_frame = bytearray([])
     
     def open_port(self):
         self.port = serial.Serial(port=self.device,
@@ -37,10 +38,12 @@ class GEWriter(ledctl.PatternWriter):
         self.port.close()
 
     def draw_frame(self, frame):
-        self.port.write('B')
-        for i in range(len(frame)):
-            self.port.write(frame[3*i:3*i + 3])
-            time.sleep(.0009) #give the controller enough time to write the new data
+        # self.port.write('B')
+        for i in range(0,len(frame), 3):
+            if i >= len(self.last_frame) or frame[i:i+3] != self.last_frame[i:i+3]:
+                self.port.write(chr(i//3) + frame[i:i+3])
+                time.sleep(.0009) #give the controller enough time to write the new data
+        self.last_frame = frame
  
     def blank(self):
         '''Turn off all the LEDs. We do this before startup to make sure the
