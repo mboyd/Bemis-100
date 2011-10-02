@@ -33,7 +33,7 @@ class Bemis100Writer(ledctl.PatternWriter):
         self.blank()
 
     def close_port(self):
-        self.blank();
+        self.blank()
         self.port.close()
 
     def draw_frame(self, frame):
