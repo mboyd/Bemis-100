@@ -11,10 +11,11 @@
 
 #define NUM_BOARDS 83
 
-#define FOSC 11059200	// Clock Speed 
+//#define FOSC 11059200	// Clock Speed 
+#define FOSC 16000000
 //#define BAUD 9600		//230400
 //#define MYUBRR (FOSC/(16*BAUD))-1		// Not valid in 2x serial mode 
-#define MYUBRR 5						// 230.4k baud, see page 198 of the datasheet
+#define MYUBRR 8						// Now 115.2k baud, was 5 for 230.4k baud, see page 198 of the datasheet
 
 #define PWM_LEN 16
 /* const uint8_t pwm_interleave[PWM_LEN] = {0, 4, 1, 5, 2, 6, 3, 7}; */
@@ -61,21 +62,22 @@ uint8_t USART_Receive() {
 void push(uint8_t c) {
 	uint8_t i;
 	for (i = 0; i<8; i++) {
-		PORTA = (c>>i)&1;
-		PORTA |= 2; //1;
-		PORTA &=~2; //0;
+		PORTB = (c>>i)&1;
+		PORTB |= 4;
+		PORTB &=~4;
 	}
 	// Assuming loop unrolling, 8 * (3+1+1) = 40 cycles
 }
 
 void latch_out() {
-	PORTA = 4;
-	PORTA = 0; //&=~4;
+	PORTB |= 2;
+	PORTB &=~2;
 }
 
-ISR(USART0_RX_vect) {	//USART_RX for atmega48
+ISR(USART_RX_vect) {	//USART_RX for atmega48
 	uint8_t c;
 	c = UDR0;
+	USART_Transmit(c);
 	if (c == 'B') {
 		frame_addr = 0;
 	} else {
@@ -93,14 +95,19 @@ int main(void) {
 	register uint8_t ln, hn;
 	register uint8_t b;
 	
-	PORTA = 0;
-	DDRA = 0x07;			//output on C0, clock on C1, C2 is output latch
+	PORTB = 0;
+	DDRB = 0x07;			//output on C0, clock on C1, C2 is output latch
+	
 	USART_Init(MYUBRR);
 	
 	uint8_t selftest[4] = {0xCC, 0x22, 0x11, 0x00};	// R, G, B, off
-	for (j = 0; j < 4; j++) {
+	
+	//for (j = 0; j < 4; j++) {
+	while (1) {
+		j++;
+		
 		for (i = 0; i < NUM_BOARDS; i++) {
-			push(selftest[j]);
+			push(selftest[j % 4]);
 		}
 		latch_out();
 		_delay_ms(700);

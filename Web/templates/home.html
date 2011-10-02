@@ -26,7 +26,7 @@ $def with (patterns)
   <div id='liveview'>
     <canvas id='canvas' width='830' height='50'>Waiting for data...</canvas>
     <div id='controls'>
-      <a class='pause' href='#'>Pause</a> &nbsp;&nbsp;|&nbsp;&nbsp;
+      <a id='play_pause' class='pause' href='#'>Pause</a> &nbsp;&nbsp;|&nbsp;&nbsp;
       <a class='next' href='#'>Next</a>
     </div>
     <div id='status'>
@@ -43,7 +43,11 @@ $def with (patterns)
   </div>
   
   <div id='patterns'>
-  	<h2>Patterns <a href='#'>New Pattern</a></h2>
+  	<h2>Patterns <!--><a href='#'>New Pattern</a>--></h2>
+  	<form id="pattern_config">
+  	  <label for="beat_tracking">Track Beat: </label>
+  	  <input name="beat_tracking" type="checkbox">
+  	</form>
   	$:show_patterns(patterns)
   </div>
   

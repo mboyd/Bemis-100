@@ -63,15 +63,7 @@ class Play:
                 if 'pattern' in params:
                     pattern_name = params['pattern']
                     track_beat = 'beat' in params
-                    graph_eq = False
-                elif 'beatpattern' in params:
-                    pattern_name = params['beatpattern']
-                    track_beat = True
-                    graph_eq = False
-                elif 'grapheqpattern' in params:
-                    pattern_name = params['grapheqpattern']
-                    track_beat = False
-                    graph_eq = True
+                    graph_eq = 'grapheq' in params
                 
                 pattern_file = os.path.join(config['pattern_dir'], pattern_name)
                 
