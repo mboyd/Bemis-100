@@ -14,57 +14,19 @@
 #                is connected.
 # FUSES ........ Parameters for avrdude to flash the fuses appropriately.
 
-DEVICE     = atmega164p
-CLOCK      = 11059200
+COMPILE_DEVICE = atmega328
+DEVICE     = atmega328p -F
+CLOCK      = 16000000
 PROGRAMMER = -c avrispmkII -P usb
 OBJECTS    = main.o
 #FUSES      = -U hfuse:w:0xdf:m -U lfuse:w:0xe6:m # For atmega48
-FUSES      = -U hfuse:w:0x99:m -U lfuse:w:0xe7:m	# Atmega164
-
-# DO NOT CHANGE FUSE SETTINGS!  THE BELOW DOCUMENTATION IS WRONG!
-
-# ATMega8 fuse bits (fuse bits for other devices are different!):
-# Example for 8 MHz internal oscillator
-# Fuse high byte:
-# 0xd9 = 1 1 0 1   1 0 0 1 <-- BOOTRST (boot reset vector at 0x0000)
-#        ^ ^ ^ ^   ^ ^ ^------ BOOTSZ0
-#        | | | |   | +-------- BOOTSZ1
-#        | | | |   +---------- EESAVE (set to 0 to preserve EEPROM over chip erase)
-#        | | | +-------------- CKOPT (clock option, depends on oscillator type)
-#        | | +---------------- SPIEN (if set to 1, serial programming is disabled)
-#        | +------------------ WDTON (if set to 0, watchdog is always on)
-#        +-------------------- RSTDISBL (if set to 0, RESET pin is disabled)
-# Fuse low byte:
-# 0x24 = 0 0 1 0   0 1 0 0
-#        ^ ^ \ /   \--+--/
-#        | |  |       +------- CKSEL 3..0 (8M internal RC)
-#        | |  +--------------- SUT 1..0 (slowly rising power)
-#        | +------------------ BODEN (if 0, brown-out detector is enabled)
-#        +-------------------- BODLEVEL (if 0: 4V, if 1: 2.7V)
-
-# Example for 12 MHz external crystal:
-# Fuse high byte:
-# 0xc9 = 1 1 0 0   1 0 0 1 <-- BOOTRST (boot reset vector at 0x0000)
-#        ^ ^ ^ ^   ^ ^ ^------ BOOTSZ0
-#        | | | |   | +-------- BOOTSZ1
-#        | | | |   +---------- EESAVE (set to 0 to preserve EEPROM over chip erase)
-#        | | | +-------------- CKOPT (clock option, depends on oscillator type)
-#        | | +---------------- SPIEN (if set to 1, serial programming is disabled)
-#        | +------------------ WDTON (if set to 0, watchdog is always on)
-#        +-------------------- RSTDISBL (if set to 0, RESET pin is disabled)
-# Fuse low byte:
-# 0x9f = 1 0 0 1   1 1 1 1
-#        ^ ^ \ /   \--+--/
-#        | |  |       +------- CKSEL 3..0 (external >8M crystal)
-#        | |  +--------------- SUT 1..0 (crystal osc, BOD enabled)
-#        | +------------------ BODEN (if 0, brown-out detector is enabled)
-#        +-------------------- BODLEVEL (if 0: 4V, if 1: 2.7V)
-
+#FUSES      = -U hfuse:w:0x99:m -U lfuse:w:0xe7:m	# Atmega164
+FUSES       = -U hfuse:w:0xd9:m -U lfuse:w:0xe2:m  # Atmega328
 
 # Tune the lines below only if you know what you are doing:
 
 AVRDUDE = sudo avrdude $(PROGRAMMER) -p $(DEVICE)
-COMPILE = avr-gcc -Wall -O3 -DF_CPU=$(CLOCK) -mmcu=$(DEVICE)
+COMPILE = avr-gcc -Wall -O3 -DF_CPU=$(CLOCK) -mmcu=$(COMPILE_DEVICE)
 
 # symbolic targets:
 all:	main.hex
