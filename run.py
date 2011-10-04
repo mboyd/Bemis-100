@@ -49,10 +49,11 @@ if __name__ == '__main__':
             devices = filter(os.path.exists, ['/dev/tty.usbserial', '/dev/ttyUSB0', '/dev/tty.usbmodemfd141'])
             if len(devices) > 0:
                 options.device = devices[0]
-        if ge:
-            b = ge.GEController(options.device, options.num_boards, options.framerate)
+        if options.ge:
+            print "GE Lights selected"
+            b = ge.GEController(options.device, num_boards=options.num_boards, framerate=options.framerate)
         else:
-            b = bemis100.Bemis100(options.device, options.num_boards, options.framerate)
+            b = bemis100.Bemis100(options.device, num_boards=options.num_boards, framerate=options.framerate)
     else:
         b = ledctl.LEDController(options.num_boards, options.framerate)
         
