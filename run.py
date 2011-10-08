@@ -11,7 +11,7 @@ if __name__ == '__main__':
                     default='83', help='Number of boards (default 83)')
     
     p.add_option('-d', action="store", dest="device", default="", 
-                    help="Device path")
+                    help="Device path (\"COM#\" for Windows)")
     
     p.add_option('-f', type='int', action='store', dest='framerate', 
                     default='30', help='Framerate (Hz, default 30)')
@@ -24,7 +24,7 @@ if __name__ == '__main__':
                     help='Repetition count (exit when done, default is to loop forever)')
     
     p.add_option('-s','--sim', action='store_true', dest='sim',default=False,
-                    help='Simulate the Bemis100 only')
+                    help='Simulate the Bemis100 only (currently broken)')
 
     p.add_option('-b','--beat', action='store_true', dest='beat',default=False,
             help='Beat pattern')
@@ -34,6 +34,9 @@ if __name__ == '__main__':
 
     p.add_option('-g', '--gelights', action='store_true', dest='ge', default=False,
             help="Use GE ColorEffects lights instead of Bemis100")
+    
+    p.add_option('-p', '--buspirate', action='store_true', dest='bp', default=False,
+            help='Communicate with avr via Bus Pirate (unimplimented)')
     
     (options, args) = p.parse_args()
 
