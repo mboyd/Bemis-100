@@ -2,7 +2,7 @@
 from __future__ import division
 
 from led import bemis100, pattern, ledctl, ge, spectrogram, beat 
-import optparse, sys, os
+import optparse, sys, os 
 
 if __name__ == '__main__':
     p = optparse.OptionParser("Usage: python %prog [pattern | pattern_dir] [options]")
@@ -52,6 +52,9 @@ if __name__ == '__main__':
             devices = filter(os.path.exists, ['/dev/tty.usbserial', '/dev/ttyUSB0', '/dev/tty.usbmodemfd141'])
             if len(devices) > 0:
                 options.device = devices[0]
+        if opions.be:
+            import pyBusPirateLite.UC
+            print "Initializing Bus Pirate"
         if options.ge:
             print "GE Lights selected"
             b = ge.GEController(options.device, num_boards=options.num_boards, framerate=options.framerate)

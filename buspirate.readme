@@ -1,0 +1,8 @@
+If you want to communicate with the avr via a Bus Pirate you need to get cloudform511's pyBusPirateLite library from
+http://dangerousprototypes.com/forum/viewtopic.php?f=28&t=1703#p18999
+and specify the -p option when you run run.py
+cd Bemis-100
+wget http://dangerousprototypes.com/forum/download/file.php?id=3740
+unzip file.php@id=3740
+rm file.php@id=3740
+mv pyBusPirateLite_v1 pyBusPriateLite
