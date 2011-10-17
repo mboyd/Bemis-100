@@ -133,8 +133,8 @@ class LEDController(object):
                 dt = time.time() - row_start
                 if dt < self.frame_dt:
                     time.sleep(self.frame_dt - dt)
-                else:
-                    print 'Draw slow by %f sec' % (dt-self.frame_dt)
+                # else:
+                    # print 'Draw slow by %f sec' % (dt-self.frame_dt)
                 
                 row_start = time.time()
                 

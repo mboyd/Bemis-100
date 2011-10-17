@@ -83,7 +83,8 @@ if __name__ == '__main__':
     while True:
         for p in patterns:
             try:
-                b.add_pattern(p, num_times=options.count, async=False)
+                b.add_pattern(p, num_times=options.count, async=True)
+                print "added pattern"
             except (KeyboardInterrupt, SystemExit):
                 options.repeat = False
                 break
