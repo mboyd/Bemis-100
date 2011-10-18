@@ -45,7 +45,7 @@ class GEWriter(ledctl.PatternWriter):
         for i in range(0,len(frame), 3):
             if i >= len(self.last_frame) or frame[i:i+3] != self.last_frame[i:i+3]:
                 self.port.write(chr(i//3) + frame[i:i+3])
-                time.sleep(.0009) #give the controller enough time to write the new data
+                time.sleep(.0012) #give the controller enough time to write the new data
         self.last_frame = frame
  
     def blank(self):

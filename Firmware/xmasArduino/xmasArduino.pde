@@ -164,12 +164,17 @@ void setup()
 void loop()  
 {  
     /* uint8_t i;*/
+    /* uint8_t j;*/
     /* for(i = 0; i < 16; i++) {*/
-    /*     xmas_fill_color(0,XMAS_LIGHT_COUNT,XMAS_DEFAULT_INTENSITY, xmas_color(15-i, 0, i));*/
+    /*     for(j = 0; j < XMAS_LIGHT_COUNT; j++) {*/
+    /*         xmas_set_color(j, 127, xmas_color((j + i) % 15, 0, 15-((j+i) % 15)));*/
+    /*     }*/
     /*     _delay_ms(100);*/
     /* }*/
     /* for(i = 0; i < 16; i++) {*/
-    /*     xmas_fill_color(0,XMAS_LIGHT_COUNT,XMAS_DEFAULT_INTENSITY, xmas_color(i, 0, 15-i));*/
+    /*     for(j = 0; j < XMAS_LIGHT_COUNT; j++) {*/
+    /*         xmas_set_color(j, 127, xmas_color(15 - (i % 15), 0, i % 15));*/
+    /*     }*/
     /*     _delay_ms(100);*/
     /* }*/
     if (Serial.available() > 0) {
