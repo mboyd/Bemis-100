@@ -74,7 +74,7 @@ xmas_zero() {
 static inline void
 xmas_end() {
 	cbi(XMAS_PORT,XMAS_PIN);
-	_delay_us(30);
+	_delay_us(40);
 }
    
    
@@ -149,11 +149,12 @@ void handle_char(uint8_t c) {
         }
 }
    
+
 void setup()  
 {  
+    uint8_t i;
     xmas_fill_color(0,XMAS_LIGHT_COUNT,XMAS_DEFAULT_INTENSITY,XMAS_COLOR_BLACK); //Enumerate all the lights  
     Serial.begin(115200);
-    uint8_t i;
     for(i = 0; i < XMAS_LIGHT_COUNT; i++) {
         xmas_set_color(i, 127, xmas_color(int(i*15/50), 0, 15-int(i*15/50)));
     }
@@ -162,6 +163,15 @@ void setup()
    
 void loop()  
 {  
+    /* uint8_t i;*/
+    /* for(i = 0; i < 16; i++) {*/
+    /*     xmas_fill_color(0,XMAS_LIGHT_COUNT,XMAS_DEFAULT_INTENSITY, xmas_color(15-i, 0, i));*/
+    /*     _delay_ms(100);*/
+    /* }*/
+    /* for(i = 0; i < 16; i++) {*/
+    /*     xmas_fill_color(0,XMAS_LIGHT_COUNT,XMAS_DEFAULT_INTENSITY, xmas_color(i, 0, 15-i));*/
+    /*     _delay_ms(100);*/
+    /* }*/
     if (Serial.available() > 0) {
         handle_char(Serial.read());
     }
