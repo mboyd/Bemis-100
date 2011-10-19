@@ -5,9 +5,9 @@ import pattern
 import numpy as np
 import random
 
-T = 1; # "Tension" 
+T = .5; # "Tension" 
 mu = 1; # "mass per length"
-friction = 0.01; # frictional force per velocity
+friction = 0; # frictional force per velocity
 dt = .5;
 
 class WavePattern:
@@ -40,7 +40,7 @@ class WavePattern:
 
         self.pos[1:self.pixels-1] += self.vel[1:self.pixels-1]*dt
 
-        if random.random() < .05:
+        if random.random() < .02:
             pulse_center = random.randrange(0, self.pixels)
             pulse_width = random.randrange(1, 15)
             if random.random() < .5:
