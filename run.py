@@ -1,11 +1,11 @@
 #!/usr/bin/env python2.6
 from __future__ import division
 
-from led import bemis100, pattern, ledctl, ge, spectrogram, beat 
+from led import bemis100, pattern, ledctl, ge, spectrogram, beat, wave
 import optparse, sys, os
 
 if __name__ == '__main__':
-    p = optparse.OptionParser("Usage: python %prog [pattern | pattern_dir] [options]")
+    p = optparse.OptionParser("Usage: python %prog [pattern | pattern_dir | wave] [options]")
     
     p.add_option('-n', type="int", action='store', dest='num_boards', 
                     default='83', help='Number of boards (default 83)')
@@ -58,9 +58,10 @@ if __name__ == '__main__':
         b = ledctl.LEDController(options.num_boards, options.framerate)
         
     print "done\nLoading patterns...",
+
         
     patterns = []
-    
+
     for fn in args:
         if os.path.isfile(fn):
             if options.beat:
@@ -72,6 +73,8 @@ if __name__ == '__main__':
         elif os.path.isdir(fn):
             names = [os.path.join(fn, f) for f in os.listdir(fn)]
             patterns.extend([pattern.Bemis100Pattern(f, options.num_boards) for f in names])
+        elif fn == 'wave':
+            patterns.append(wave.WavePattern(num_boards = options.num_boards))
         else:
             print "Not a pattern file or directory: %s\n\n" % fn 
     

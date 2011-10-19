@@ -3,6 +3,7 @@ from __future__ import division
 from multiprocessing import Process, Pipe
 import pattern
 import numpy as np
+import random
 
 T = 1; # "Tension" 
 mu = 1; # "mass per length"
@@ -12,6 +13,7 @@ dt = .5;
 class WavePattern:
     def __init__(self,num_boards = 83):
         self.pixels = num_boards*2
+        print self.pixels, "pixels in use"
         self.pos = np.zeros(self.pixels)
         self.vel = np.zeros(self.pixels)
         self.acc = np.zeros(self.pixels)
@@ -34,7 +36,19 @@ class WavePattern:
         
         self.vel[1:self.pixels-1] += self.acc[1:self.pixels-1]*dt
 
+        self.vel[1:self.pixels-1] *= .95
+
         self.pos[1:self.pixels-1] += self.vel[1:self.pixels-1]*dt
+
+        if random.random() < .05:
+            pulse_center = random.randrange(0, self.pixels)
+            pulse_width = random.randrange(1, 15)
+            if random.random() < .5:
+                pulse_sign = -1
+            else:
+                pulse_sign = 1
+            self.pos[max(1, pulse_center - pulse_width//2):min(self.pixels-1, 
+                                                               pulse_center + pulse_width//2)] = pulse_sign
 
         for i in range(self.pixels):
             # new_point = abs(self.data[i])
@@ -48,11 +62,11 @@ class WavePattern:
                 # self.new_data = [0,0,self.new_point*255]
                 self.out[i*3] = 0
                 self.out[i*3+1] = 0
-                self.out[i*3+2] = self.new_point*255
+                self.out[i*3+2] = int(self.new_point*255)
             elif self.new_point < 0:
                 # self.new_data = np.array([-self.new_point*255,0,0])
                 # self.new_data = [-self.new_point*255,0,0]
-                self.out[i*3] = -self.new_point*255
+                self.out[i*3] = int(-self.new_point*255)
                 self.out[i*3+1] = 0
                 self.out[i*3+2] = 0
             else:
@@ -62,15 +76,17 @@ class WavePattern:
                 self.out[i*3+1] = 0
                 self.out[i*3+2] = 0
             # self.out[i*3:i*3+3] = self.new_data
-        return bytearray(self.out)
+        return bytearray((int(i) for i in self.out))
 
     def __iter__(self):
+        pulse_width = 20
         start_data = np.array(\
                 [0]+\
-                [0]*np.floor(self.pixels/2-31)+\
-                [1]*60+\
-                [0]*np.ceil(self.pixels/2-31)+\
+                [0]*np.floor(self.pixels/2-(pulse_width//2+1))+\
+                [1]*pulse_width+\
+                [0]*np.ceil(self.pixels/2-(pulse_width//2+1))+\
                 [0])
+        print "start data", start_data
         # start_data = np.array(\
                 # [0]+\
                 # [1]*20+\

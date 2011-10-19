@@ -7,7 +7,7 @@ import time
 class GEController(ledctl.LEDController):
     def __init__(self, device, framerate=20, num_boards=25, start_websocket=True):
         super(GEController, self).__init__(device, framerate=framerate, 
-                                    start_websocket=start_websocket)
+                                    start_websocket=False)
         
         self.num_boards = num_boards
         print "init boards", num_boards
@@ -22,8 +22,8 @@ class GEWriter(ledctl.PatternWriter):
         self.device = device
         self.port = None
         self.num_boards = num_boards
-        self.last_frame = bytearray([])
-    
+        self.last_frame = None
+
     def open_port(self):
         self.port = serial.Serial(port=self.device,
                 baudrate=115200,
@@ -42,8 +42,8 @@ class GEWriter(ledctl.PatternWriter):
 
     def draw_frame(self, frame):
         # self.port.write('B')
-        for i in range(0,len(frame), 3):
-            if i >= len(self.last_frame) or frame[i:i+3] != self.last_frame[i:i+3]:
+        for i in range(0, len(frame), 3):
+            if self.last_frame is None or frame[i:i+3] != self.last_frame[i:i+3]:
                 self.port.write(chr(i//3) + frame[i:i+3])
                 time.sleep(.0012) #give the controller enough time to write the new data
         self.last_frame = frame
