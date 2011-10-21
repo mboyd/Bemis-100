@@ -7,7 +7,7 @@ import random
 
 T = .5; # "Tension" 
 mu = 1; # "mass per length"
-friction = 0; # frictional force per velocity
+friction = 0.01; # frictional force per velocity
 dt = .5;
 
 class WavePattern:
@@ -22,7 +22,7 @@ class WavePattern:
     def get_line(self):
         self.update_physics()
 
-        if random.random() < .02:
+        if random.random() < .01:
             self.add_pulse()
 
         for i in range(self.pixels):
@@ -37,7 +37,7 @@ class WavePattern:
         
         self.vel[1:self.pixels-1] += self.acc[1:self.pixels-1]*dt
 
-        self.vel[1:self.pixels-1] *= .95
+        # self.vel[1:self.pixels-1] *= .95
 
         self.pos[1:self.pixels-1] += self.vel[1:self.pixels-1]*dt
 

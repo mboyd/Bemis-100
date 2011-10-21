@@ -1,7 +1,7 @@
 #!/usr/bin/env python2.6
 from __future__ import division
 
-from led import bemis100, pattern, ledctl, ge, spectrogram, beat, wave
+from led import bemis100, pattern, ledctl, ge, spectrogram, beat, wave, new_wave
 import optparse, sys, os
 
 if __name__ == '__main__':
@@ -75,6 +75,8 @@ if __name__ == '__main__':
             patterns.extend([pattern.Bemis100Pattern(f, options.num_boards) for f in names])
         elif fn == 'wave':
             patterns.append(wave.WavePattern(num_boards = options.num_boards))
+        elif fn == 'new_wave':
+            patterns.append(new_wave.NewWavePattern(num_boards = options.num_boards))
         else:
             print "Not a pattern file or directory: %s\n\n" % fn 
     
