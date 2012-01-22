@@ -1,7 +1,7 @@
 #!/usr/bin/env python2.6
 from __future__ import division
 
-import multiprocessing, threading, time, socket, re, struct, hashlib, copy
+import multiprocessing, threading, time, socket, re, struct, hashlib, base64, copy
 
 class LEDController(object):
     def __init__(self, device, framerate=30, start_websocket=True, \
@@ -226,34 +226,19 @@ class WebsocketWriter(PatternWriter):
             client, addr = self.sock.accept()
             print 'Accepted websocket connection from %s' % str(addr)
             header = ''
-            while not re.search("\r\n\r\n.{8}", header): # Receive headers + 8 bytes data
+            while not re.search("\r\n\r\n", header): # Receive headers
                 header += client.recv(1024)
+                        
+            key = re.search("Sec-WebSocket-Key: ([^\s]*)\s*$", header, re.M).group(1)
             
-            key1 = re.search("Sec-WebSocket-Key1: (.*)$", header, re.M).group(1)
-            key2 = re.search("Sec-WebSocket-Key2: (.*)$", header, re.M).group(1)
-            
-            data = header[-8:]
-            
-            key1n = int(re.sub("[^\d]", '', key1))
-            key1ns = key1.count(' ')
-            n1 = key1n // key1ns
-            
-            key2n = int(re.sub("[^\d]", '', key2))
-            key2ns = key2.count(' ')
-            n2 = key2n // key2ns
-            
-            s = struct.pack("!II", n1, n2) + data
-            respkey = hashlib.md5(s).digest()
+            s = key + "258EAFA5-E914-47DA-95CA-C5AB0DC85B11"
+            respkey = base64.b64encode(hashlib.sha1(s).digest())
             resp = \
                 "HTTP/1.1 101 Web Socket Protocol Handshake\r\n" + \
                 "Upgrade: WebSocket\r\n" + \
                 "Connection: Upgrade\r\n" + \
-                "Sec-WebSocket-Origin: http://"+self.hostname+":"+ \
-                    str(self.orig_port)+"\r\n" + \
-                "Sec-WebSocket-Location: ws://"+self.hostname+":"+ \
-                    str(self.port)+"/\r\n" + \
-                "Sec-WebSocket-Protocol: ledweb\r\n\r\n" + \
-                respkey + "\r\n"
+                "Sec-WebSocket-Accept: " + respkey + "\r\n" + \
+                "\r\n"
                         
             client.send(resp)
             self.clients_lock.acquire()
@@ -277,11 +262,20 @@ class WebsocketWriter(PatternWriter):
     def client_push(self, data):
         self.clients_lock.acquire()
         dead_clients = []
+
+        b1 = 0x80 | (0x01 & 0x0f) 
+        payload_len = len(data)
+        if payload_len <= 125:
+            header = struct.pack('>BB', b1, payload_len)
+        elif payload_len > 125 and payload_len < 65536:
+            header = struct.pack('>BBH', b1, 126, payload_len)
+        elif payload_len >= 65536:
+            header = struct.pack('>BBQ', b1, 127, payload_len)
+        
         for i in range(len(self.clients)):
             try:
-                self.clients[i].send("\x00")
+                self.clients[i].send(header)
                 self.clients[i].send(data)
-                self.clients[i].send("\xff")
             except socket.error:
                 dead_clients.append(i)
         
