@@ -5,23 +5,22 @@ import serial
 import time
 
 class GEController(ledctl.LEDController):
-    def __init__(self, device, framerate=20, num_boards=25, start_websocket=True):
+    def __init__(self, device, framerate=20, num_lights=50, start_websocket=True):
         super(GEController, self).__init__(device, framerate=framerate, 
                                     start_websocket=False)
         
-        self.num_boards = num_boards
-        print "init boards", num_boards
+        self.num_lights = num_lights
         if not device == 'sim':
-            self.add_writer(GEWriter(device, num_boards, framerate))
+            self.add_writer(GEWriter(device, num_lights, framerate))
 
 class GEWriter(ledctl.PatternWriter):
     
-    def __init__(self, device, num_boards, framerate):
+    def __init__(self, device, num_lights, framerate):
         super(GEWriter, self).__init__(framerate)
         
         self.device = device
         self.port = None
-        self.num_boards = num_boards
+        self.num_lights = num_lights
         self.last_frame = None
 
     def open_port(self):
@@ -51,7 +50,7 @@ class GEWriter(ledctl.PatternWriter):
     def blank(self):
         '''Turn off all the LEDs. We do this before startup to make sure the
         power supplies are not loaded by the LEDs when they come online.'''
-        print self.num_boards
-        f = bytearray('\x00\x00\x00'*2*self.num_boards)
+        print self.num_lights
+        f = bytearray('\x00\x00\x00'*self.num_lights)
         self.draw_frame(f)
  
