@@ -1,3 +1,6 @@
 ledweb/build
 *.pyc
 .DS_Store
+*.elf
+*.hex
+*.o
