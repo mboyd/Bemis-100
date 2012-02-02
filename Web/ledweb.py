@@ -1,7 +1,7 @@
 #!/usr/bin/env python2.6
 import tornado
 
-import os, os.path, shutil, sys, re
+import os, os.path, shutil, sys, re, json
 
 sys.path.append('..')
 
@@ -125,47 +125,43 @@ class Play(tornado.web.RequestHandler):
             raise web.Found('/')
 
 class Queue(tornado.web.RequestHandler):
-    @jsonify
     def get(self):
-        return dict(queue=[(p[0], p[2]) for p in bemis100.get_queue()])
+        self.write(json.dumps(dict(queue=[(p[0], p[2]) for p in bemis100.get_queue()])))
 
 class Status(tornado.web.RequestHandler):
-    @jsonify
     def get(self):
-        return dict(status=bemis100.status())
+        self.write(json.dumps(dict(status=bemis100.status())))
 
 class Pause(tornado.web.RequestHandler):
-    @jsonify
     def get(self):
         bemis100.pause()
-        return dict(success=True)
+        self.write(json.dumps(dict(success=True)))
 
 class Next(tornado.web.RequestHandler):
-    @jsonify
     def get(self):
         bemis100.next()
-        return dict(success=True)
+        self.write(json.dumps(dict(success=True)))
 
-class Upload(tornado.web.RequestHandler):
-    def post(self):
-        try:
-            i = web.input(pattern={})
-            f = i['pattern']
-            fn = f.filename
-            if '/' in fn:
-                fn = fn[fn.rfind('/')+1:]
+# class Upload(tornado.web.RequestHandler):
+#     def post(self):
+#         try:
+#             i = web.input(pattern={})
+#             f = i['pattern']
+#             fn = f.filename
+#             if '/' in fn:
+#                 fn = fn[fn.rfind('/')+1:]
                 
-            base_path = config['pattern_dir']
-            path = os.path.join(base_path, fn)
+#             base_path = config['pattern_dir']
+#             path = os.path.join(base_path, fn)
             
-            new_f = open(path, 'w')
-            shutil.copyfileobj(f.file, new_f)
-            f.file.close()
-            new_f.close()
-        except Exception:
-            raise
+#             new_f = open(path, 'w')
+#             shutil.copyfileobj(f.file, new_f)
+#             f.file.close()
+#             new_f.close()
+#         except Exception:
+#             raise
         
-        raise web.Found('/')
+#         raise web.Found('/')
 
 if __name__ == '__main__':
     handlers = [(r'/', Home),
@@ -173,7 +169,7 @@ if __name__ == '__main__':
         (r'/queue', Queue),
         (r'/pause', Pause),
         (r'/next', Next),
-        (r'/upload', Upload),
+        # (r'/upload', Upload),
             (r"/socket", ClientSocket)]
     # application = tornado.web.Application([(r"/", Home),
     #                                        (r"/socket",ClientSocket)],
@@ -182,4 +178,5 @@ if __name__ == '__main__':
 
     application.listen(5000)
     tornado.ioloop.IOLoop.instance().start()
+    sys.exit()
 
