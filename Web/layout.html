@@ -1,62 +1,63 @@
 <!DOCTYPE html>
 <html>
-<head>
-  <title>LEDWeb Alpha</title>
-  <link href='/static/stylesheets/bemis100.css' rel='stylesheet' type='text/css'>
-  <link href='http://fonts.googleapis.com/css?family=Droid+Sans' rel='stylesheet' type='text/css'>
-  <script src='/static/javascripts/jquery-1.5.min.js'></script>
-  <script src='/static/javascripts/bemis100.js'></script>
-  <script src='/static/javascripts/muro.js'></script>
-</head>
+	<head>
+		<title>LEDWeb Alpha</title>
+		<link href='/static/stylesheets/bemis100.css' rel='stylesheet' type='text/css'>
+		<link href='http://fonts.googleapis.com/css?family=Droid+Sans' rel='stylesheet' type='text/css'>
+		<script src='/static/javascripts/jquery-1.5.min.js'></script>
+		<script src='/static/javascripts/bemis100.js'></script>
+		<script src='/static/javascripts/muro.js'></script>
+	</head>
 
-<body>  
-  <div id='content'>
-<div id='header'>
-    <h1>Bemis 100</h1>
-  </div>
-  
-  <div id='current'>
-	  <ul>
-		  <li>No pattern</li>
-	  </ul>
-  </div>
-  <div id='liveview'>
-    <canvas id='canvas', height='50'>Waiting for data...</canvas>
-    <div id='controls'>
-      <a id='play_pause' class='play' href='#'>Play</a> &nbsp;&nbsp;|&nbsp;&nbsp;
-      <a class='next' href='#'>Next</a>
-    </div>
-    <div id='status'>
-      <span id='connection'>Status: disconnected</span>&nbsp;&nbsp;
-      <span id='framerate'></span>
-    </div>
-  </div>
-  
-  <div id='queue'>
-  	<h2>Queue</h2>
-  	<ul>
-  	  <li>Loading queue...</li>
-  	</ul>
-  </div>
-  
-  <div id='patterns'>
-  	<h2>Patterns <!--><a href='#'>New Pattern</a>--></h2>
-  	<form id="pattern_config">
-  	  <label for="beat_tracking">Track Beat: </label>
-  	  <input name="beat_tracking" type="checkbox">
-  </form>
-  {% autoescape None %}
-  {{patterns_html}}
+	<body>  
+		<div id='content'>
+			<div id='header'>
+				<h1>Bemis 100</h1>
+			</div>
 
-</div>
-  
-  <div id='upload'>
-    <form action='/upload' method='post' enctype="multipart/form-data">
-      <label for='pattern'>Upload a pattern</label>
-      <input type='file' name='pattern'>
-      <input type='submit' value='Upload'>
-    </form>
-  </div>
-  </div>
-</body>
+			<div id='current'>
+				<h2>Playing</h2>
+				<ul>
+					<li>No pattern</li>
+				</ul>
+			</div>
+			<div id='liveview'>
+				<canvas id='canvas'>Waiting for data...</canvas>
+				<div id='controls'>
+					<a id='play_pause' class='play' href='#'>Play</a> &nbsp;&nbsp;|&nbsp;&nbsp;
+					<a class='next' href='#'>Next</a>
+				</div>
+				<div id='status'>
+					<span id='connection'>Status: disconnected</span>&nbsp;&nbsp;
+					<span id='framerate'></span>
+				</div>
+			</div>
+
+			<div id='queue'>
+				<h2>Queue</h2>
+				<ul>
+					<li>Loading queue...</li>
+				</ul>
+			</div>
+
+			<div id='patterns'>
+				<h2>Patterns <!--><a href='#'>New Pattern</a>--></h2>
+				<form id="pattern_config">
+					<label for="beat_tracking">Track Beat: </label>
+					<input name="beat_tracking" type="checkbox">
+				</form>
+				{% autoescape None %}
+				{{patterns_html}}
+
+			</div>
+
+			<div id='upload'>
+				<form action='/upload' method='post' enctype="multipart/form-data">
+					<label for='pattern'>Upload a pattern</label>
+					<input type='file' name='pattern'>
+					<input type='submit' value='Upload'>
+				</form>
+			</div>
+		</div>
+	</body>
 </html>

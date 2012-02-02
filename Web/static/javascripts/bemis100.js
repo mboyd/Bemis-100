@@ -35,6 +35,7 @@ $(document).ready(function() {
       $(evt.target).removeClass('play');
       $(evt.target).addClass('pause');
       $(evt.target).html('Pause');
+	  updateQueue();
     
     } else if ($(evt.target).hasClass('next')) { 
       $.getJSON('/next', function(result) {
@@ -143,9 +144,9 @@ function updateQueue() {
         '</li>';
     }
     $('#queue ul').html(qh);
-	var current = result['current'];
-	var p = current[0];
-	var n = current[1];
+	var current_pattern = result['current'];
+	var p = current_pattern[0];
+	var n = current_pattern[1];
 	if (n != 0) {
 		$('#current ul').html('<li><img src="/static/patterns/' + p + '">' + '</li>');
 	}
