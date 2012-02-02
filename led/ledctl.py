@@ -228,7 +228,11 @@ class WebsocketWriter(PatternWriter):
         self.client_push(json_data)
         
     def client_push(self, data):
-        self.websocket.write_message(data)
+        try:
+            self.websocket.write_message(data)
+        except IOError:
+            print "Port closed"
+            
     
     def close_port(self):
         self.client_push('{"status":"exiting"}')
