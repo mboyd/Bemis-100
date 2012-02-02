@@ -5,9 +5,9 @@ import serial
 import time
 
 class GEController(ledctl.LEDController):
-    def __init__(self, device, framerate=20, num_lights=50, start_websocket=True):
+    def __init__(self, device, framerate=60, num_lights=50, start_websocket=True):
         super(GEController, self).__init__(device, framerate=framerate, 
-                                    start_websocket=False)
+                                    start_websocket=True)
         
         self.num_lights = num_lights
         if not device == 'sim':

@@ -67,17 +67,24 @@ $(document).ready(function() {
 });
 
 function connect() {
-  ws = new WebSocket("ws://localhost:9999");
+	// console.log('connecting')
+	var wstype = window.WebSocket || window.MozWebSocket;
+
+  ws = new wstype("ws://localhost:5000/socket");
+  // ws = new WebSocket("ws://echo.websocket.org/");
   
   ws.onopen = function() {
     $('#connection').html('Status: connected');
     updateQueue();
+	// console.log('Opened WS connection')
   }
   
   ws.onmessage = function(e) {
+	  // console.log('got message');
     var data = JSON.parse(e.data);
     
     if (data['status'] == 'ok') {
+		// console.log(data['frame']);
       var frame = data['frame'];
       var pixelWidth = canvas.width / frame.length;
       var height = canvas.height;
@@ -106,6 +113,7 @@ function connect() {
   };
   
   ws.onclose = function() {
+	  // console.log('Closed WS connection')
     $('#connection').html('Status: disconnected');
     blank();
     setTimeout(connect, 2000);

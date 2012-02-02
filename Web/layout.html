@@ -1,25 +1,17 @@
-$def with (patterns)
-  $code:
-    def show_patterns(patterns):
-        s = ''
-        for e in patterns:
-            if type(e) is tuple:
-                s += '<div class="pattern_folder">' + \
-                        '<h3>' + e[0] + '</h3>' + \
-                        show_patterns(e[1]) + \
-                      '</div>'
-            else:
-                s += show_pattern(e)
-        return s
+<!DOCTYPE html>
+<html>
+<head>
+  <title>LEDWeb Alpha</title>
+  <link href='/static/stylesheets/bemis100.css' rel='stylesheet' type='text/css'>
+  <link href='http://fonts.googleapis.com/css?family=Droid+Sans' rel='stylesheet' type='text/css'>
+  <script src='/static/javascripts/jquery-1.5.min.js'></script>
+  <script src='/static/javascripts/bemis100.js'></script>
+  <script src='/static/javascripts/muro.js'></script>
+</head>
 
-    def show_pattern(p):
-        s = '<a href="/play?pattern='+p+'">\n' + \
-            '\t<img class="pattern" data-pattern="'+p+'" alt="pattern" ' + \
-            'src="'+path_join(config['pattern_dir'],p)+'">\n' + \
-            '</a>\n'
-        return s
-
-  <div id='header'>
+<body>  
+  <div id='content'>
+<div id='header'>
     <h1>Bemis 100</h1>
   </div>
   
@@ -47,9 +39,11 @@ $def with (patterns)
   	<form id="pattern_config">
   	  <label for="beat_tracking">Track Beat: </label>
   	  <input name="beat_tracking" type="checkbox">
-  	</form>
-  	$:show_patterns(patterns)
-  </div>
+  </form>
+  {% autoescape None %}
+  {{patterns_html}}
+
+</div>
   
   <div id='upload'>
     <form action='/upload' method='post' enctype="multipart/form-data">
@@ -58,3 +52,6 @@ $def with (patterns)
       <input type='submit' value='Upload'>
     </form>
   </div>
+  </div>
+</body>
+</html>
