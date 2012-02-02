@@ -107,7 +107,7 @@ class LEDController(object):
             
             self.queue_lock.acquire()
             name, pattern, n = self.queue.pop(0)
-            self.current_pattern = pattern
+            self.current_pattern = {'pattern': pattern, 'name': name, 'num_times': n}
             self.queue_lock.release()
             
             self.draw_pattern(pattern, n)

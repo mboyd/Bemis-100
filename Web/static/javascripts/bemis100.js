@@ -55,11 +55,11 @@ $(document).ready(function() {
       params.beat = true;
     }
     
-    $('#play_pause').removeClass('pause');
-    $('#play_pause').addClass('play');
-    $('#play_pause').html('Play');
+    // $('#play_pause').removeClass('pause');
+    // $('#play_pause').addClass('play');
+    // $('#play_pause').html('Play');
     
-    $.getJSON('/play', params, function(result) {
+    $.getJSON('/add', params, function(result) {
       updateQueue();
     });
   });
@@ -116,7 +116,7 @@ function connect() {
 	  // console.log('Closed WS connection')
     $('#connection').html('Status: disconnected');
     blank();
-    setTimeout(connect, 2000);
+    // setTimeout(connect, 2000);
   }
 }
 
@@ -143,5 +143,11 @@ function updateQueue() {
         '</li>';
     }
     $('#queue ul').html(qh);
+	var current = result['current'];
+	var p = current[0];
+	var n = current[1];
+	if (n != 0) {
+		$('#current ul').html('<li><img src="/static/patterns/' + p + '">' + '</li>');
+	}
   })
 }

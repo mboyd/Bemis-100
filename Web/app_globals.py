@@ -15,7 +15,7 @@ bemis100 = GEController(device=config['device'],
                         framerate=config['framerate'],
                         num_lights=config['num_lights'])
 
-def jsonify(f):
-    def json_f(*args, **kwargs):
-        return json.dumps(f(*args, **kwargs))
-    return json_f
+# def jsonify(f):
+#     def json_f(*args, **kwargs):
+#         return json.dumps(f(*args, **kwargs))
+#     return json_f

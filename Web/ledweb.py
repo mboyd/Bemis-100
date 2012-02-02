@@ -5,7 +5,7 @@ import os, os.path, shutil, sys, re, json
 
 sys.path.append('..')
 
-from app_globals import bemis100, config, jsonify
+from app_globals import bemis100, config
 
 from led.bemis100 import Bemis100
 from led.ledctl import WebsocketWriter
@@ -14,7 +14,6 @@ from led.pattern import Bemis100Pattern
 from led.beat import BeatPatternRMS, BeatPattern
 from led.graphEq import GraphEqPattern
 from led.wave import WavePattern
-
 
 
 websockets = []
@@ -75,16 +74,8 @@ class Home(tornado.web.RequestHandler):
         patterns_html = show_patterns(patterns)
         self.render("layout.html", title="Bemis100", patterns_html=patterns_html)
 
-class Play(tornado.web.RequestHandler):
-    @jsonify
+class Add(tornado.web.RequestHandler):
     def get(self):
-        format_json = True
-        # if re.match('application/json|text/javascript', web.ctx.environ['HTTP_ACCEPT']):
-        #     format_json = True
-        # else:
-        #     format_json = False
-        
-        # params = web.input()
         params = self.request.arguments
         print params
         if 'pattern' in params or 'beatpattern' in params \
@@ -114,19 +105,24 @@ class Play(tornado.web.RequestHandler):
                 print "Added pattern:", pattern_name
             
             except Exception as e:
-                raise
-                # return dict(success=False, error=str(e))
+                print "caught error in Play"
+                self.write(json.dumps(dict(success=False, error=str(e))))
         
-        bemis100.play()
+        # bemis100.play()
+        self.write(json.dumps(dict(success=True)))
         
-        if format_json:
-            return dict(success=True)
-        else:
-            raise web.Found('/')
 
 class Queue(tornado.web.RequestHandler):
+    
     def get(self):
-        self.write(json.dumps(dict(queue=[(p[0], p[2]) for p in bemis100.get_queue()])))
+        current_pattern = bemis100.get_current_pattern()
+        if current_pattern is not None:
+            current = [current_pattern['name'],
+                       current_pattern['num_times']]
+        else:
+            current = ['', 0]
+        self.write(json.dumps(dict(queue=[(p[0], p[2]) for p in bemis100.get_queue()],
+                                   current=current)))
 
 class Status(tornado.web.RequestHandler):
     def get(self):
@@ -135,6 +131,11 @@ class Status(tornado.web.RequestHandler):
 class Pause(tornado.web.RequestHandler):
     def get(self):
         bemis100.pause()
+        self.write(json.dumps(dict(success=True)))
+
+class Play(tornado.web.RequestHandler):
+    def get(self):
+        bemis100.play()
         self.write(json.dumps(dict(success=True)))
 
 class Next(tornado.web.RequestHandler):
@@ -166,14 +167,12 @@ class Next(tornado.web.RequestHandler):
 if __name__ == '__main__':
     handlers = [(r'/', Home),
         (r'/play', Play),
+        (r'/add', Add),
         (r'/queue', Queue),
         (r'/pause', Pause),
         (r'/next', Next),
         # (r'/upload', Upload),
             (r"/socket", ClientSocket)]
-    # application = tornado.web.Application([(r"/", Home),
-    #                                        (r"/socket",ClientSocket)],
-    #                                       static_path='static')
     application = tornado.web.Application(handlers=handlers, static_path='static')
 
     application.listen(5000)

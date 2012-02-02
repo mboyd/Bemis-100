@@ -38,7 +38,7 @@ div#header h1 {
 }
 
 div#liveview {
-  width: 95%;
+  width: 75%;
   margin: 15px 2%;
   padding: 3px;
   margin-bottom: 10px;
@@ -65,13 +65,41 @@ div#controls a {
   font-weight: 90;
 }
 
+div#current {
+	width: 130px;
+	margin: 0 2%;
+	float: left;
+  background: #414141;
+  border-radius: 10px;
+  }
+
+div#current ul {
+  margin-top: 0;
+}
+
+div#current ul li {
+  list-style-type: none;
+  margin: auto;
+  padding: 0;
+}
+
+div#current ul li img {
+  width: 50px;
+  height: 50px;
+  margin: auto;
+  border: 2px solid #202020;
+  border-radius: 5px;
+}
+
 div#queue {
   width: 130px;
+  height: 50px;
   margin: 0 2%;
   float: left;
   background: #414141;
   border-radius: 10px;
 }
+
 
 div#queue h2 {
   margin-bottom: 15px;
