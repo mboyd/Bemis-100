@@ -87,7 +87,8 @@ class LEDController(object):
     def assert_writers_alive(self):
         for w in self.writers:
             if not w.is_alive():
-                raise SystemExit
+                self.writers.remove(w)
+                # raise SystemExit
     
     def wait_for_data(self):
         while len(self.queue) == 0:
@@ -232,6 +233,7 @@ class WebsocketWriter(PatternWriter):
             self.websocket.write_message(data)
         except IOError:
             print "Port closed"
+            raise
             
     
     def close_port(self):
