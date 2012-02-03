@@ -1,6 +1,5 @@
 ledweb/build
 *.pyc
 .DS_Store
-Web/static/patterns
 /build/
 /dist/
