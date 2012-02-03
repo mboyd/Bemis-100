@@ -140,7 +140,7 @@ div#queue ul li img {
 div#patterns {
   overflow: auto;
   margin-bottom: 10px;;
-  background: #aaa;
+  background: #414141;
   border-radius: 10px;
   margin-right: 2%;
   background-image: -webkit-gradient(
@@ -184,6 +184,10 @@ div#patterns img {
   padding: 3px;
   background: #202020;
   border-radius: 5px;
+}
+
+div#pattern h2 {
+	color: #aaa;
 }
 
 div#upload {

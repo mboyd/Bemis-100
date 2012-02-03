@@ -1,5 +1,6 @@
 #!/usr/bin/env python2.6
 import tornado
+import tornado.httpserver
 
 import os, os.path, shutil, sys, re, json
 
@@ -14,6 +15,7 @@ from led.pattern import Bemis100Pattern
 from led.beat import BeatPatternRMS, BeatPattern
 from led.graphEq import GraphEqPattern
 from led.wave import WavePattern
+from led.new_wave import NewWavePattern
 
 
 websockets = []
@@ -86,23 +88,32 @@ class Add(tornado.web.RequestHandler):
                     track_beat = 'beat' in params
                     graph_eq = 'grapheq' in params
                 
-                pattern_file = os.path.join(config['pattern_dir'], pattern_name)
-                
-                p = Bemis100Pattern(pattern_file, config['num_lights'])
-                #p = WavePattern(config['num_boards'])
-                
-                if track_beat:
-                    p = BeatPattern(p)
-                elif graph_eq:
-                    p = GraphEqPattern(p)
-                
-                if 'num_times' in params:
-                    n = int(params['num_times'])
+                p = None
+                if pattern_name.startswith("Specials"):
+                    if "new_wave" in pattern_name:
+                        p = NewWavePattern(num_lights = config['num_lights'])
+                    elif "wave" in pattern_name:
+                        p = WavePattern(num_lights = config['num_lights'])
                 else:
-                    n = -1
-                
-                bemis100.add_pattern(p, n, name=pattern_name)
-                print "Added pattern:", pattern_name
+                    pattern_path = os.path.join(config['pattern_dir'], pattern_name)
+                    if os.path.exists(pattern_path):
+                        p = Bemis100Pattern(pattern_path, config['num_lights'])
+
+                if p is not None:
+                    if track_beat:
+                        p = BeatPattern(p)
+                    elif graph_eq:
+                        p = GraphEqPattern(p)
+                    
+                    if 'num_times' in params:
+                        n = int(params['num_times'])
+                    else:
+                        n = -1
+                    
+                    bemis100.add_pattern(p, n, name=pattern_name)
+                    print "Added pattern:", pattern_name
+                else:
+                    print "Invalid pattern name:", pattern_name
             
             except Exception as e:
                 print "caught error in Play"
@@ -174,8 +185,10 @@ if __name__ == '__main__':
         # (r'/upload', Upload),
             (r"/socket", ClientSocket)]
     application = tornado.web.Application(handlers=handlers, static_path='static')
+    server = tornado.httpserver.HTTPServer(application)
+    server.listen(5000)
 
-    application.listen(5000)
+    # application.listen(5000)
     tornado.ioloop.IOLoop.instance().start()
     sys.exit()
 
