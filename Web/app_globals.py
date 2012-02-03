@@ -5,9 +5,10 @@ from led.bemis100 import Bemis100
 from led.ge import GEController
 
 config = {'pattern_dir' : 'static/patterns',
-               'device' : 'sim',
+               # 'device' : 'sim',
+               'device' : '/dev/tty.usbmodemfa131',
            'num_lights' : 50,
-            'framerate' : 30 }
+            'framerate' : 40 }
 
 # bemis100 = Bemis100(config['device'], num_boards=83, \
 #         framerate=config['framerate'])
