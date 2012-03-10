@@ -44,6 +44,10 @@
 #define XMAS_PIN	4
 #define XMAS_PORT	PORTD
 #define XMAS_DDR	DDRD
+
+#define DIAL_PIN A0
+int dial_value = 0;
+int brightness = 0;
 // 
 static void
 xmas_begin() {
@@ -142,9 +146,12 @@ uint8_t current_frame[] = {0, 0, 0, 0};
 void handle_char(uint8_t c) {
         current_frame[color_index] = c;
         color_index++;
+		dial_value = analogRead(DIAL_PIN);
+		brightness = dial_value / 8;
         if (color_index >= 4) {
-            xmas_set_color(current_frame[0], 127, xmas_color(current_frame[1]>>4, 
-                            current_frame[2]>>4, current_frame[3]>>4));
+            xmas_set_color(current_frame[0], brightness,
+										xmas_color(current_frame[1]>>4, 
+										current_frame[2]>>4, current_frame[3]>>4));
             color_index = 0;
         }
 }
@@ -155,28 +162,18 @@ void setup()
     uint8_t i;
     xmas_fill_color(0,XMAS_LIGHT_COUNT,XMAS_DEFAULT_INTENSITY,XMAS_COLOR_BLACK); //Enumerate all the lights  
     Serial.begin(115200);
-    for(i = 0; i < XMAS_LIGHT_COUNT; i++) {
-        xmas_set_color(i, 127, xmas_color(int(i*15/50), 0, 15-int(i*15/50)));
-    }
+	while(Serial.available() == 0) {
+		dial_value = analogRead(DIAL_PIN);
+		brightness = dial_value / 8;
+		for(i = 0; i < XMAS_LIGHT_COUNT; i++) {
+			xmas_set_color(i, brightness, xmas_color(int(i*15/50), 0, 15-int(i*15/50)));
+		}
+	}
 }  
  
    
 void loop()  
 {  
-    /* uint8_t i;*/
-    /* uint8_t j;*/
-    /* for(i = 0; i < 16; i++) {*/
-    /*     for(j = 0; j < XMAS_LIGHT_COUNT; j++) {*/
-    /*         xmas_set_color(j, 127, xmas_color((j + i) % 15, 0, 15-((j+i) % 15)));*/
-    /*     }*/
-    /*     _delay_ms(100);*/
-    /* }*/
-    /* for(i = 0; i < 16; i++) {*/
-    /*     for(j = 0; j < XMAS_LIGHT_COUNT; j++) {*/
-    /*         xmas_set_color(j, 127, xmas_color(15 - (i % 15), 0, i % 15));*/
-    /*     }*/
-    /*     _delay_ms(100);*/
-    /* }*/
     if (Serial.available() > 0) {
         handle_char(Serial.read());
     }
