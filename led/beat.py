@@ -3,32 +3,38 @@ from __future__ import division
 import pyaudio
 import numpy as np
 import sys, os
-from multiprocessing import Process, Lock, Pipe
+# from multiprocessing import Process, Lock, Pipe
+import multiprocessing
 import pattern
+import Queue
 
 CHUNK = 512
 FORMAT = pyaudio.paInt8
 CHANNELS = 1
 RATE = 44100
 BAR_PATTERN = [255,0,0]
-FREQ_RANGE = [0,200] # Hz 
+FREQ_RANGE = [0,200] # Hz
 # GAIN = 0.0035
 GAIN = 0.002
 RMS_GAIN = 50000 # gain
-RMS_CHUNK = 512               
+RMS_CHUNK = 512
 
-def listen(chunk,conn):
+def listen(chunk, queue):
     while True:
+        print "starting listener now"
         p = pyaudio.PyAudio()
         stream = p.open(input_device_index = 3, format = FORMAT, channels = CHANNELS,
                         rate = RATE, input = True, frames_per_buffer = chunk)
         while True:
+            # try:
+            new_data = stream.read(chunk)
             try:
-                new_data = stream.read(chunk)
-                conn.send(new_data)
-            except IOError:
-                print "listener died...restarting"
-                break
+                queue.put(new_data, False)
+            except Queue.Full:
+                pass
+            # except IOError:
+            #     print "listener died...restarting"
+            #     break
 
 def rfft_to_val(c,freq_range = [0,10000],gain = 255/750000,
                 block_size=1024,sample_rate = RATE):
@@ -55,11 +61,14 @@ class BeatPattern:
         self.bar_decay = .2
 
     def start_listener(self):
-        self.parent_conn, child_conn = Pipe(duplex=False)
+        # self.parent_conn, child_conn = Pipe(duplex=False)
+        self.queue = multiprocessing.Queue()
 
-        proc = Process(target = listen, args=(self.chunk,child_conn))
-        proc.daemonic = True
-        proc.start()
+        self.listen_proc = multiprocessing.Process(target = listen, args=(self.chunk, self.queue))
+        self.listen_proc.daemonic = True
+        if not self.listen_proc.is_alive():
+            print "starting proc"
+            self.listen_proc.start()
         # self.listener = Listener(self.chunk)
         # self.listener.start()
         try:
@@ -67,7 +76,8 @@ class BeatPattern:
         except StopIteration:
             self.base_pattern_iter = self.base_pattern.__iter__()
             self.last_out = np.zeros(len(self.base_pattern_iter.next()))
-        self.data = self.parent_conn.recv()
+        # self.data = self.parent_conn.recv()
+        self.data = self.queue.get()
         self.c = data_to_rfft(self.data)
 
     def get_line(self):
@@ -91,15 +101,17 @@ class BeatPattern:
 
         averaged_out = self.out*0.75+self.last_out*0.25
         self.last_out = self.out
-        return bytearray([int(c) for c in averaged_out]) 
+        return bytearray([int(c) for c in averaged_out])
 
     def update_val(self):
         # print '\n\n'
         # print [ord(i) for i in self.data.value]
         # print '\n\n'
         # c = data_to_rfft(self.listener.data)
-        while self.parent_conn.poll():
-            self.data = self.parent_conn.recv()
+        # while self.parent_conn.poll():
+        #     self.data = self.parent_conn.recv()
+        while not self.queue.empty():
+            self.data = self.queue.get()
         c = data_to_rfft(self.data)
         self.val = rfft_to_val(c,freq_range=FREQ_RANGE,gain=GAIN,
                 block_size=self.chunk)
@@ -119,7 +131,7 @@ class BeatPattern:
         bar_high = int(self.target_width/2+self.bar_pos) + bar_width
         bar_high = bar_high + bar_width - bar_high % bar_width
         self.out[bar_low:bar_low+bar_width] = BAR_PATTERN
-        self.out[bar_high-bar_width:bar_high] = BAR_PATTERN 
+        self.out[bar_high-bar_width:bar_high] = BAR_PATTERN
 
 
     def __iter__(self):
@@ -143,7 +155,7 @@ class BeatPatternRMS(BeatPattern):
         self.val = min(self.val,self.target_width/2-9)
         self.old_vals.insert(0,self.val)
         self.old_vals.pop()
-        
-        
+
+
 
 
