@@ -59,25 +59,29 @@ uint8_t USART_Receive() {
 	return UDR0;
 }
 
-void push(uint8_t c) {
+inline void push(uint8_t c) {
 	uint8_t i;
+    uint8_t v;
+    uint8_t w;
 	for (i = 0; i<8; i++) {
-		PORTB = (c>>i)&1;
-		PORTB |= 4;
-		PORTB &=~4;
+		v = (c>>i)&1;
+        w = v | 4;
+        PORTB = v;
+        PORTB = w;
+        PORTB = v;
 	}
 	// Assuming loop unrolling, 8 * (3+1+1) = 40 cycles
 }
 
-void latch_out() {
-	PORTB |= 2;
-	PORTB &=~2;
+inline void latch_out() {
+	PORTB = 2;
+	PORTB = 0;
 }
 
 ISR(USART_RX_vect) {	//USART_RX for atmega48
 	uint8_t c;
 	c = UDR0;
-	USART_Transmit(c);
+	//USART_Transmit(c);
 	if (c == 'B') {
 		frame_addr = 0;
 	} else {
@@ -95,15 +99,14 @@ int main(void) {
 	register uint8_t ln, hn;
 	register uint8_t b;
 	
-	PORTB = 0;
 	DDRB = 0x07;			//output on C0, clock on C1, C2 is output latch
+	PORTB = 0x00;
 	
 	USART_Init(MYUBRR);
 	
 	uint8_t selftest[4] = {0xCC, 0x22, 0x11, 0x00};	// R, G, B, off
 	
-	//for (j = 0; j < 4; j++) {
-	while (1) {
+	for (j = 0; j < 4; j++) {
 		j++;
 		
 		for (i = 0; i < NUM_BOARDS; i++) {
