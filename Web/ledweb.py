@@ -1,32 +1,57 @@
 #!/usr/bin/env python2.6
-import web
+import tornado
+import tornado.httpserver
 
-import os, os.path, shutil, sys, re
+import os, os.path, shutil, sys, re, json
 
 sys.path.append('..')
 
-from app_globals import bemis100, config, jsonify
+from app_globals import bemis100, config
 
 from led.bemis100 import Bemis100
+from led.ledctl import WebsocketWriter
 from led.ge import GEController
 from led.pattern import Bemis100Pattern
 from led.beat import BeatPatternRMS, BeatPattern
 from led.graphEq import GraphEqPattern
 from led.wave import WavePattern
+from led.new_wave import NewWavePattern
 
-urls = ('/', 'Home',
-        '/play', 'Play',
-        '/queue', 'Queue',
-        '/pause', 'Pause',
-        '/next', 'Next',
-        '/upload', 'Upload')
 
-g = {'config' : config, 'type' : type, 'path_join' : os.path.join}
-render = web.template.render('templates/', base='layout', globals=g)
+websockets = []
 
-class Home(object):
+# g = {'config' : config, 'type' : type, 'path_join' : os.path.join}
+# render = web.template.render('templates/', base='layout', globals=g)
 
-    def GET(self):
+def show_patterns(patterns):
+    s = ''
+    for e in patterns:
+        if type(e) is tuple:
+            s += '<div class="pattern_folder">' + \
+                    '<h3>' + e[0] + '</h3>' + \
+                    show_patterns(e[1]) + \
+                  '</div>'
+        else:
+            s += show_pattern(e)
+    return s
+
+def show_pattern(p):
+    s = '<a href="/play?pattern='+p+'">\n' + \
+        '\t<img class="pattern" data-pattern="'+p+'" alt="pattern" ' + \
+        'src="'+os.path.join(config['pattern_dir'],p)+'">\n' + \
+        '</a>\n'
+    return s
+
+class ClientSocket(tornado.websocket.WebSocketHandler):
+    def open(self):
+        bemis100.add_writer(WebsocketWriter(config['framerate'], self))
+        print "WebSocket opened"
+
+    def on_close(self):
+        print "WebSocket closed"
+
+class Home(tornado.web.RequestHandler):
+    def get(self):
         
         def find_patterns(d):
             patterns = []
@@ -46,97 +71,124 @@ class Home(object):
             return patterns
         
         patterns = find_patterns(config['pattern_dir'])
-        
-        return render.home(patterns)
 
-class Play:
-    @jsonify
-    def GET(self):
-        if re.match('application/json|text/javascript', web.ctx.environ['HTTP_ACCEPT']):
-            format_json = True
-        else:
-            format_json = False
-        
-        params = web.input()
+
+        patterns_html = show_patterns(patterns)
+        self.render("layout.html", title="Bemis100", patterns_html=patterns_html)
+
+class Add(tornado.web.RequestHandler):
+    def get(self):
+        params = self.request.arguments
+        print params
         if 'pattern' in params or 'beatpattern' in params \
                 or 'grapheqpattern' in params:
             try:
                 if 'pattern' in params:
-                    pattern_name = params['pattern']
+                    pattern_name = params['pattern'][0]
                     track_beat = 'beat' in params
                     graph_eq = 'grapheq' in params
                 
-                pattern_file = os.path.join(config['pattern_dir'], pattern_name)
-                
-                p = Bemis100Pattern(pattern_file, config['num_boards'])
-                #p = WavePattern(config['num_boards'])
-                
-                if track_beat:
-                    p = BeatPattern(p)
-                elif graph_eq:
-                    p = GraphEqPattern(p)
-                
-                if 'num_times' in params:
-                    n = int(params['num_times'])
+                p = None
+                if pattern_name.startswith("Specials"):
+                    if "new_wave" in pattern_name:
+                        p = NewWavePattern(num_lights = config['num_lights'])
+                    elif "wave" in pattern_name:
+                        p = WavePattern(num_lights = config['num_lights'])
                 else:
-                    n = -1
-                
-                bemis100.add_pattern(p, n, name=pattern_name)
+                    pattern_path = os.path.join(config['pattern_dir'], pattern_name)
+                    if os.path.exists(pattern_path):
+                        p = Bemis100Pattern(pattern_path, config['num_lights'])
+
+                if p is not None:
+                    if track_beat:
+                        p = BeatPattern(p)
+                    elif graph_eq:
+                        p = GraphEqPattern(p)
+                    
+                    if 'num_times' in params:
+                        n = int(params['num_times'])
+                    else:
+                        n = -1
+                    
+                    bemis100.add_pattern(p, n, name=pattern_name)
+                    print "Added pattern:", pattern_name
+                else:
+                    print "Invalid pattern name:", pattern_name
             
             except Exception as e:
-                return dict(success=False, error=str(e))
+                print "caught error in Play"
+                self.write(json.dumps(dict(success=False, error=str(e))))
         
-        bemis100.play()
+        # bemis100.play()
+        self.write(json.dumps(dict(success=True)))
         
-        if format_json:
-            return dict(success=True)
+
+class Queue(tornado.web.RequestHandler):
+    
+    def get(self):
+        current_pattern = bemis100.get_current_pattern()
+        if current_pattern is not None:
+            current = [current_pattern['name'],
+                       current_pattern['num_times']]
         else:
-            raise web.Found('/')
+            current = ['', 0]
+        self.write(json.dumps(dict(queue=[(p[0], p[2]) for p in bemis100.get_queue()],
+                                   current=current)))
 
-class Queue(object):
-    @jsonify
-    def GET(self):
-        return dict(queue=[(p[0], p[2]) for p in bemis100.get_queue()])
+class Status(tornado.web.RequestHandler):
+    def get(self):
+        self.write(json.dumps(dict(status=bemis100.status())))
 
-class Status(object):
-    @jsonify
-    def GET(self):
-        return dict(status=bemis100.status())
-
-class Pause(object):
-    @jsonify
-    def GET(self):
+class Pause(tornado.web.RequestHandler):
+    def get(self):
         bemis100.pause()
-        return dict(success=True)
+        self.write(json.dumps(dict(success=True)))
 
-class Next(object):
-    @jsonify
-    def GET(self):
+class Play(tornado.web.RequestHandler):
+    def get(self):
+        bemis100.play()
+        self.write(json.dumps(dict(success=True)))
+
+class Next(tornado.web.RequestHandler):
+    def get(self):
         bemis100.next()
-        return dict(success=True)
+        self.write(json.dumps(dict(success=True)))
 
-class Upload(object):
-    def POST(self):
-        try:
-            i = web.input(pattern={})
-            f = i['pattern']
-            fn = f.filename
-            if '/' in fn:
-                fn = fn[fn.rfind('/')+1:]
+# class Upload(tornado.web.RequestHandler):
+#     def post(self):
+#         try:
+#             i = web.input(pattern={})
+#             f = i['pattern']
+#             fn = f.filename
+#             if '/' in fn:
+#                 fn = fn[fn.rfind('/')+1:]
                 
-            base_path = config['pattern_dir']
-            path = os.path.join(base_path, fn)
+#             base_path = config['pattern_dir']
+#             path = os.path.join(base_path, fn)
             
-            new_f = open(path, 'w')
-            shutil.copyfileobj(f.file, new_f)
-            f.file.close()
-            new_f.close()
-        except Exception:
-            raise
+#             new_f = open(path, 'w')
+#             shutil.copyfileobj(f.file, new_f)
+#             f.file.close()
+#             new_f.close()
+#         except Exception:
+#             raise
         
-        raise web.Found('/')
+#         raise web.Found('/')
 
 if __name__ == '__main__':
-    sys.argv.append('5000')     # Set port
-    app = web.application(urls, globals())
-    app.run()
+    handlers = [(r'/', Home),
+        (r'/play', Play),
+        (r'/add', Add),
+        (r'/queue', Queue),
+        (r'/pause', Pause),
+        (r'/next', Next),
+        # (r'/upload', Upload),
+            (r"/socket", ClientSocket)]
+    application = tornado.web.Application(handlers=handlers, static_path='static')
+    server = tornado.httpserver.HTTPServer(application)
+    server.listen(5000)
+
+    # application.listen(5000)
+    tornado.ioloop.IOLoop.instance().start()
+    sys.exit()
+

@@ -1,10 +1,6 @@
 from __future__ import division
 
-from multiprocessing import Process, Pipe
 from wave import WavePattern
-import pattern
-import numpy as np
-import random
 
 class NewWavePattern(WavePattern):
     def output_func(self, point):

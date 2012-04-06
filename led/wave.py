@@ -11,8 +11,8 @@ friction = 0.01; # frictional force per velocity
 dt = .5;
 
 class WavePattern:
-    def __init__(self,num_boards = 83):
-        self.pixels = num_boards*2
+    def __init__(self,num_lights = 166):
+        self.pixels = num_lights
         print self.pixels, "pixels in use"
         self.pos = np.zeros(self.pixels)
         self.vel = np.zeros(self.pixels)
@@ -79,10 +79,6 @@ class WavePattern:
                 # [1]*20+\
                 # [0]*int(self.pixels-22)+\
                 # [0])
-
-        # start_data = np.zeros(self.num_boards*2)
-        # for i in range(len(start_data)):
-            # start_data[i] = np.sin(i*np.pi*2/(self.num_boards*2-1))
 
         self.pos += start_data
         return iter(self.get_line,None)

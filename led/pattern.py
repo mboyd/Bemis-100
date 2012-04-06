@@ -9,10 +9,10 @@ the Bemis100.
 '''
 
 class Bemis100Pattern:
-    def __init__(self, filename, num_boards=0):
+    def __init__(self, filename, num_lights=0):
         self.filename = filename
         self.current_row = 0
-        self.read_image(2*num_boards)
+        self.read_image(num_lights)
 
     def read_image(self, target_width=0):
         '''Read the image, then create an array with the data in the correct

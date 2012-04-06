@@ -35,6 +35,7 @@ $(document).ready(function() {
       $(evt.target).removeClass('play');
       $(evt.target).addClass('pause');
       $(evt.target).html('Pause');
+	  updateQueue();
     
     } else if ($(evt.target).hasClass('next')) { 
       $.getJSON('/next', function(result) {
@@ -55,11 +56,11 @@ $(document).ready(function() {
       params.beat = true;
     }
     
-    $('#play_pause').removeClass('pause');
-    $('#play_pause').addClass('play');
-    $('#play_pause').html('Play');
+    // $('#play_pause').removeClass('pause');
+    // $('#play_pause').addClass('play');
+    // $('#play_pause').html('Play');
     
-    $.getJSON('/play', params, function(result) {
+    $.getJSON('/add', params, function(result) {
       updateQueue();
     });
   });
@@ -67,17 +68,24 @@ $(document).ready(function() {
 });
 
 function connect() {
-  ws = new WebSocket("ws://localhost:9999");
+	// console.log('connecting')
+	var wstype = window.WebSocket || window.MozWebSocket;
+
+  ws = new wstype("ws://localhost:5000/socket");
+  // ws = new WebSocket("ws://echo.websocket.org/");
   
   ws.onopen = function() {
     $('#connection').html('Status: connected');
     updateQueue();
+	// console.log('Opened WS connection')
   }
   
   ws.onmessage = function(e) {
+	  // console.log('got message');
     var data = JSON.parse(e.data);
     
     if (data['status'] == 'ok') {
+		// console.log(data['frame']);
       var frame = data['frame'];
       var pixelWidth = canvas.width / frame.length;
       var height = canvas.height;
@@ -106,9 +114,10 @@ function connect() {
   };
   
   ws.onclose = function() {
+	  // console.log('Closed WS connection')
     $('#connection').html('Status: disconnected');
     blank();
-    setTimeout(connect, 2000);
+    // setTimeout(connect, 2000);
   }
 }
 
@@ -135,5 +144,11 @@ function updateQueue() {
         '</li>';
     }
     $('#queue ul').html(qh);
+	var current_pattern = result['current'];
+	var p = current_pattern[0];
+	var n = current_pattern[1];
+	if (n != 0) {
+		$('#current ul').html('<li><img src="/static/patterns/' + p + '">' + '</li>');
+	}
   })
 }

@@ -1,11 +1,12 @@
 #!/usr/bin/env python2.6
 from __future__ import division
 
-import multiprocessing, threading, time, socket, re, struct, hashlib, base64, copy
+import multiprocessing, threading, time, socket, re, struct, hashlib, copy, base64
+import tornado.websocket
 
 class LEDController(object):
     def __init__(self, device, framerate=30, start_websocket=True, \
-                    ws_hostname='localhost', ws_orig_port=5000, ws_port=9999):
+                    websocket=None):
         
         self.frame_dt = 1.0 / framerate
         self.device = device
@@ -24,8 +25,8 @@ class LEDController(object):
         
         self._next = threading.Event()    # If set, skip to the next pattern
         
-        if start_websocket:
-            self.add_writer(WebsocketWriter(framerate, ws_hostname, ws_orig_port, ws_port))
+        # if start_websocket:
+        #     self.add_writer(WebsocketWriter(framerate, websocket))
         
         self.queue_thread = threading.Thread(target=self.pump_queue)
         self.queue_thread.start()
@@ -86,7 +87,8 @@ class LEDController(object):
     def assert_writers_alive(self):
         for w in self.writers:
             if not w.is_alive():
-                raise SystemExit
+                self.writers.remove(w)
+                # raise SystemExit
     
     def wait_for_data(self):
         while len(self.queue) == 0:
@@ -106,7 +108,7 @@ class LEDController(object):
             
             self.queue_lock.acquire()
             name, pattern, n = self.queue.pop(0)
-            self.current_pattern = pattern
+            self.current_pattern = {'pattern': pattern, 'name': name, 'num_times': n}
             self.queue_lock.release()
             
             self.draw_pattern(pattern, n)
@@ -201,51 +203,18 @@ class PatternWriter(multiprocessing.Process):
         self.close_port()
         raise SystemExit
 
+
 class WebsocketWriter(PatternWriter):
     
-    def __init__(self, framerate, hostname, orig_port, port):
+    def __init__(self, framerate, websocket):
         super(WebsocketWriter, self).__init__(framerate)
-        self.hostname = hostname
-        self.orig_port = orig_port
-        self.port = port
+        self.websocket = websocket
 
     def open_port(self):
-        self.clients = []
-        self.clients_lock = threading.Lock()
+        pass
         
-        self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        self.sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-        self.sock.bind(('', 9999))
-        self.sock.listen(1)
-        
-        self.connection_thread = threading.Thread(target=self.handle_connections)
-        self.connection_thread.start()
-    
-    def handle_connections(self):
-        while True:
-            client, addr = self.sock.accept()
-            print 'Accepted websocket connection from %s' % str(addr)
-            header = ''
-            while not re.search("\r\n\r\n", header): # Receive headers
-                header += client.recv(1024)
-                        
-            key = re.search("Sec-WebSocket-Key: ([^\s]*)\s*$", header, re.M).group(1)
-            
-            s = key + "258EAFA5-E914-47DA-95CA-C5AB0DC85B11"
-            respkey = base64.b64encode(hashlib.sha1(s).digest())
-            resp = \
-                "HTTP/1.1 101 Web Socket Protocol Handshake\r\n" + \
-                "Upgrade: WebSocket\r\n" + \
-                "Connection: Upgrade\r\n" + \
-                "Sec-WebSocket-Accept: " + respkey + "\r\n" + \
-                "\r\n"
-                        
-            client.send(resp)
-            self.clients_lock.acquire()
-            self.clients.append(client)
-            self.clients_lock.release()
-    
     def draw_frame(self, frame):
+        # print "Drawing frame:", [chr(x) for x in frame]
         json_frame = ['{"status":"ok", "frame" : [']
         
         for i in range(0, len(frame)-3, 3):
@@ -260,43 +229,14 @@ class WebsocketWriter(PatternWriter):
         self.client_push(json_data)
         
     def client_push(self, data):
-        self.clients_lock.acquire()
-        dead_clients = []
-
-        b1 = 0x80 | (0x01 & 0x0f) 
-        payload_len = len(data)
-        if payload_len <= 125:
-            header = struct.pack('>BB', b1, payload_len)
-        elif payload_len > 125 and payload_len < 65536:
-            header = struct.pack('>BBH', b1, 126, payload_len)
-        elif payload_len >= 65536:
-            header = struct.pack('>BBQ', b1, 127, payload_len)
-        
-        for i in range(len(self.clients)):
-            try:
-                self.clients[i].send(header)
-                self.clients[i].send(data)
-            except socket.error:
-                dead_clients.append(i)
-        
-        for i in range(len(dead_clients)):
-            self.close_sock(self.clients[dead_clients[i]-i])
-            del self.clients[dead_clients[i]-i]
-        self.clients_lock.release()
-    
+        try:
+            self.websocket.write_message(data)
+        except IOError:
+            print "Port closed"
+            raise
+                
     def close_port(self):
         self.client_push('{"status":"exiting"}')
         time.sleep(1.0)
+        self.websocket.close()
         
-        self.clients_lock.acquire()
-        for c in self.clients:
-            self.close_sock(c)
-        self.clients_lock.release()
-        self.close_sock(self.sock)
-    
-    def close_sock(self, s):
-        try:
-            c.shutdown(socket.SHUT_RDWR)
-            c.close()
-        except Exception:
-            pass

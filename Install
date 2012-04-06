@@ -1,0 +1,23 @@
+Software
+===========
+Required packages:
+Python 2.7
+numpy
+-Download from http://sourceforge.net/projects/numpy/files/NumPy/
+pyaudio
+-Download from http://people.csail.mit.edu/hubert/pyaudio/
+PySerial
+-Download from http://pypi.python.org/pypi/pyserial
+Python Image Library
+-Download from http://www.pythonware.com/products/pil/
+
+
+GE Lights
+===========
+Windows:
+Plug in the Arduino UNO USB device, wait for the driver software installation to fail
+Open Device Manager in Control Panel, right click on the "Arduino UNO" device
+Select "Update driver software"
+Choose the driver location manually, and select the Drivers folder in this directory
+The installation should finish, and your Device Manager should now have an entry called "Communications Port (COM4)" in Ports. Note that you may see a number other than 4. 
+
