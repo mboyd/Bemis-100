@@ -3,7 +3,7 @@ from __future__ import division
 
 from led import bemis100, pattern, ledctl, ge, wave, new_wave
 # from led import beat, spectrogram
-import optparse, sys, os
+import optparse, sys, os, time
 
 if __name__ == '__main__':
     p = optparse.OptionParser(
@@ -97,6 +97,7 @@ if __name__ == '__main__':
     b.play()
     
     while True:
+        print patterns
         for p in patterns:
             print p.image_data
             try:
@@ -105,9 +106,10 @@ if __name__ == '__main__':
             except (KeyboardInterrupt, SystemExit):
                 options.repeat = False
                 break
-            
+
         if not options.repeat:
             break
-    
+
     b.quit()
+    
     print 'done'

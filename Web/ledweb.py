@@ -1,4 +1,3 @@
-#!/usr/bin/env python2.6
 import tornado
 import tornadio2
 import tornado.httpserver
@@ -7,11 +6,10 @@ import os, os.path, shutil, sys, re, json
 
 sys.path.append('..')
 
+print "Running the import"
 from app_globals import bemis100, config
 
-from led.bemis100 import Bemis100
 from led.ledctl import WebsocketWriter
-from led.ge import GEController
 from led.pattern import Bemis100Pattern
 from led.beat import BeatPatternRMS, BeatPattern
 from led.graphEq import GraphEqPattern

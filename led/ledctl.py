@@ -126,7 +126,12 @@ class LEDController(object):
             self.current_pattern = {'pattern': pattern, 'name': name, 'num_times': n}
             self.queue_lock.release()
             
-            self.draw_pattern(pattern, n)
+            if pattern is not None:
+                self.draw_pattern(pattern, n)
+            else:
+                print "Controller exiting..."
+                for w in self.writers:
+                    w.exit()
     
     def draw_pattern(self, pattern, num_times):
         count = 0

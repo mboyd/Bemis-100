@@ -1,5 +1,5 @@
-import sys, json
-sys.path.append('..')
+# import sys, json
+# sys.path.append('..')
 
 from led.bemis100 import Bemis100
 from led.ge import GEController
