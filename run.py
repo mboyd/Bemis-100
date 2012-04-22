@@ -34,7 +34,7 @@ if __name__ == '__main__':
     p.add_option('-w','--wave', action='store_true',dest='wave',default=False,
                  help='Wave beat pattern')
 
-    p.add_option('-g', '--gelights', action='store_true', dest='ge', default=True,
+    p.add_option('-g', '--gelights', action='store_true', dest='ge', default=False,
             help="Use GE ColorEffects lights instead of Bemis100")
     
     (options, args) = p.parse_args()
@@ -98,8 +98,9 @@ if __name__ == '__main__':
     
     while True:
         for p in patterns:
+            print p.image_data
             try:
-                b.add_pattern(p, num_times=options.count, async=True)
+                b.add_pattern(p, num_times=options.count, async=False)
                 print "added pattern"
             except (KeyboardInterrupt, SystemExit):
                 options.repeat = False

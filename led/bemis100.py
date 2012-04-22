@@ -24,7 +24,7 @@ class Bemis100Writer(ledctl.PatternWriter):
     
     def open_port(self):
         self.port = serial.Serial(port=self.device,
-                baudrate=230400,
+                baudrate=115200,
                 bytesize=serial.EIGHTBITS,
                 stopbits=serial.STOPBITS_ONE,
                 parity=serial.PARITY_NONE,
@@ -38,7 +38,7 @@ class Bemis100Writer(ledctl.PatternWriter):
 
     def draw_frame(self, frame):
         self.port.write('B')
-        self.port.write([encode_char(c) for c in frame])
+        self.port.write(bytearray([encode_char(c) for c in frame]))
  
     def blank(self):
         '''Turn off all the LEDs. We do this before startup to make sure the
@@ -55,8 +55,13 @@ PWM_BINS = PWM_BITS + 1
 PWM_CUTOFFS = [int(255.*i/(PWM_BINS)) for i in range(1, PWM_BINS+1)]
 PWM_VALS = [2**i-1 for i in range(PWM_BINS)]
 
+PWM_CUTOFFS = [0] + [5.33*i+3 for i in range(48)] + [255]
+
 def encode_char(value):
-    return PWM_LOOKUP[value]
+    if (value < 6):
+        return 0
+    else:
+        return max(int(PWM_LOOKUP[value]), 9)
 
 def _encode_char(value):
     """Return a bitmask for a pwm representation of the 8-bit
@@ -64,9 +69,10 @@ def _encode_char(value):
     brightness of a pixel by the number of 1s in an 8-bit string, which we
     transmit as a single character."""
     
-    for i in range(PWM_BINS):
+    for i in range(len(PWM_CUTOFFS)):
         if value <= PWM_CUTOFFS[i]:
-            return PWM_VALS[i]
+            return PWM_CUTOFFS[i]
+            #return PWM_VALS[i]
     raise ValueError, "Pixel value %i out of range" % value
 
 PWM_LOOKUP = [_encode_char(i) for i in range(256)]

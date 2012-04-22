@@ -111,6 +111,27 @@ class DDFPattern:
         except EOFError:
             pass
     
+    def read_ddf_pattern(self):
+        f = open(self.filename, 'r')
+  
+        try:
+            while True:
+                frame = []
+                for r in range(32):
+                    row_pix = f.read(3*16)
+                
+                    row_r = nib_encode( [p[0] for p in row_pix] )
+                    row_g = nib_encode( [p[1] for p in row_pix] )
+                    row_b = nib_encode( [p[2] for p in row_pix] )
+                
+                    row = row_r + row_g + row_b
+                    enc_frame.append(bytearray(row))
+            
+                self.frames.append(enc_frame)
+
+        except EOFError:
+            pass
+    
     def __getitem__(self, i):
         return self.frames[i]
                     
