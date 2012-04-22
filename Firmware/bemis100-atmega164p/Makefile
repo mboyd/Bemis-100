@@ -26,7 +26,7 @@ FUSES       = -U hfuse:w:0xd9:m -U lfuse:w:0xe2:m  # Atmega328
 # Tune the lines below only if you know what you are doing:
 
 AVRDUDE = avrdude $(PROGRAMMER) -p $(DEVICE)
-COMPILE = avr-gcc -Wall -O3 -DF_CPU=$(CLOCK) -mmcu=$(COMPILE_DEVICE)
+COMPILE = avr-gcc -Wall -O3 -std=gnu99 -DF_CPU=$(CLOCK) -mmcu=$(COMPILE_DEVICE)
 
 # symbolic targets:
 all:	main.hex
