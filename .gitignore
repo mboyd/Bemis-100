@@ -1,5 +1,6 @@
 ledweb/build
 *.pyc
+*.sublime-workspace
 .DS_Store
 /build/
 /dist/

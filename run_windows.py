@@ -1,2 +1,2 @@
 import os
-os.system("python run.py -f 30 -g -n 25 -d COM5 new_wave")
+os.system("python run.py -f 40 -g -n 50 -d COM5 Web/static/patterns/Rainbows/rainbow_bullseye_lessblack.gif")
