@@ -7,17 +7,9 @@ import time
 
 ACK_COUNT = 4
 
-class GEController(ledctl.LEDController):
-    def __init__(self, device, framerate=30, num_lights=50):
-        super(GEController, self).__init__(device, framerate=framerate)
-        
-        self.num_lights = num_lights
-        if not device == 'sim':
-            self.add_writer(GEWriter(device, num_lights, framerate))
-
 class GEWriter(ledctl.PatternWriter):
     
-    def __init__(self, device, num_lights, framerate):
+    def __init__(self, device, num_lights=50, framerate=30):
         super(GEWriter, self).__init__(framerate)
         
         self.device = device

@@ -5,10 +5,9 @@ from serial import SerialException
 import multiprocessing, threading, time, socket, re, struct, hashlib, copy, base64, sys
 
 class LEDController(object):
-    def __init__(self, device, framerate=30, websocket=None):
+    def __init__(self, framerate=30):
         
         self.frame_dt = 1.0 / framerate
-        self.device = device
         
         self.queue = []
         self.queue_has_data = threading.Event()
@@ -79,7 +78,7 @@ class LEDController(object):
         
         if not async:
             self.wait_for_finish()
-    
+   
     def play(self):
         self._play.set()
     

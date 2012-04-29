@@ -7,7 +7,7 @@ import os, os.path, shutil, sys, re, json
 
 sys.path.append('..')
 
-from app_globals import bemis100, config
+from app_globals import controller, config
 
 from led.ledctl import WebsocketWriter
 from led.pattern import Bemis100Pattern
@@ -47,7 +47,7 @@ class ClientSocket(tornadio2.SocketConnection):
     def on_open(self, request):
         w = WebsocketWriter(config['framerate'], self)
         self.writers[self] = w
-        bemis100.add_writer(w)
+        controller.add_writer(w)
         print "WebSocket opened"
         return True
     
@@ -56,7 +56,7 @@ class ClientSocket(tornadio2.SocketConnection):
 
     def on_close(self):
         print "WebSocket closed"
-        bemis100.remove_writer(self.writers[self])
+        controller.remove_writer(self.writers[self])
         del self.writers[self]
 
 class Home(tornado.web.RequestHandler):
@@ -118,43 +118,43 @@ class Add(tornado.web.RequestHandler):
                 else:
                     n = -1
                 
-                bemis100.add_pattern(p, n, name=pattern_name)
+                controller.add_pattern(p, n, name=pattern_name)
                 print "Added pattern:", pattern_name
             else:
                 print "Invalid pattern name:", pattern_name
-        # bemis100.play()
+        # controller.play()
         self.write(json.dumps(dict(success=True)))
         
 
 class Queue(tornado.web.RequestHandler):
     
     def get(self):
-        current_pattern = bemis100.get_current_pattern()
+        current_pattern = controller.get_current_pattern()
         if current_pattern is not None:
             current = [current_pattern['name'],
                        current_pattern['num_times']]
         else:
             current = ['', 0]
-        self.write(json.dumps(dict(queue=[(p[0], p[2]) for p in bemis100.get_queue()],
+        self.write(json.dumps(dict(queue=[(p[0], p[2]) for p in controller.get_queue()],
                                    current=current)))
 
 class Status(tornado.web.RequestHandler):
     def get(self):
-        self.write(json.dumps(dict(status=bemis100.status())))
+        self.write(json.dumps(dict(status=controller.status())))
 
 class Pause(tornado.web.RequestHandler):
     def get(self):
-        bemis100.pause()
+        controller.pause()
         self.write(json.dumps(dict(success=True)))
 
 class Play(tornado.web.RequestHandler):
     def get(self):
-        bemis100.play()
+        controller.play()
         self.write(json.dumps(dict(success=True)))
 
 class Next(tornado.web.RequestHandler):
     def get(self):
-        bemis100.next()
+        controller.next()
         self.write(json.dumps(dict(success=True)))
 
 # class Upload(tornado.web.RequestHandler):
@@ -194,8 +194,8 @@ if __name__ == '__main__':
         server = tornadio2.SocketServer(application)
     except KeyboardInterrupt:
         print 'Exiting...'
-        bemis100.quit()
-        print 'bemis100 exit'
+        controller.quit()
+        print 'controller exit'
         print "active threads", threading._active
         sys.exit()
 
