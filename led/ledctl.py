@@ -1,8 +1,7 @@
 #!/usr/bin/env python2.6
 from __future__ import division
 
-import multiprocessing, threading, time, socket, re, struct, hashlib, copy, base64
-import tornado.websocket
+import multiprocessing, threading, time, socket, re, struct, hashlib, copy, base64, sys
 
 class LEDController(object):
     def __init__(self, device, framerate=30, start_websocket=True, \
@@ -56,12 +55,23 @@ class LEDController(object):
             self.queue_has_data.clear()
         self.queue_lock.release()
     
+    def clear_queue(self):
+        self.queue_lock.acquire()
+        for i in range(len(self.queue)):
+            self.queue.pop(i)
+        
+        self.queue_has_data.clear()
+        self.queue_lock.release()
+    
     def add_writer(self, writer):
         i, o = multiprocessing.Pipe()
         writer.setup(i, o)
         self.writers.append(writer)
         self.writer_count += 1
         writer.start()
+    
+    def remove_writer(self, writer):
+        writer.send_frame([])
     
     def add_pattern(self, pattern, num_times=-1, name='', async=True):
         self.queue_lock.acquire()
@@ -100,7 +110,12 @@ class LEDController(object):
             w.wait_for_finish()
     
     def quit(self):
-        self.add_pattern(None)
+        self.clear_queue()
+        self.add_pattern([[]])
+        if not self.is_playing():
+            self.play()
+        else:
+            self.next()
     
     def pump_queue(self):
         while True:
@@ -125,6 +140,9 @@ class LEDController(object):
                 break
             
             row_start = time.time()
+            if pattern is None:
+                self.exit()
+            
             for frame in pattern:
                 self.assert_writers_alive()
                 
@@ -140,22 +158,26 @@ class LEDController(object):
                 dt = time.time() - row_start
                 if dt < self.frame_dt:
                     time.sleep(self.frame_dt - dt)
-                # else:
-                    # print 'Draw slow by %f sec' % (dt-self.frame_dt)
+                else:
+                    print 'Draw slow by %f sec' % (dt-self.frame_dt)
                 
                 row_start = time.time()
                 
             count += 1
     
     def draw_frame(self, frame):
-        for w in self.writers:
-            w.send_frame(frame)
+        for i, w in enumerate(self.writers):
+            try:
+                w.send_frame(frame)
+            except IOError:
+                w.exit()
+                del self.writers[i]
                     
-class PatternWriter(multiprocessing.Process):
+class PatternWriter(threading.Thread):
     
     def __init__(self, framerate):
         super(PatternWriter, self).__init__()
-        
+        self.daemon = True
         self.frame_dt = 1.0 / framerate
     
     def open_port(self):
@@ -177,8 +199,8 @@ class PatternWriter(multiprocessing.Process):
         
         if self.pipe_out.poll():
             r = self.pipe_out.recv()
-            if r.has_key('status') and r['status'] == 'exiting':
-                raise SystemExit
+            #if r.has_key('status') and r['status'] == 'exiting':
+            #    raise SystemExit
             
         self.pipe_out.send(pattern_data)
     
@@ -188,25 +210,25 @@ class PatternWriter(multiprocessing.Process):
             while True:
                 frame = self.pipe_in.recv()
                 
-                if frame is None:
+                if len(frame) == 0:
                     raise SystemExit
                 
                 self.draw_frame(frame)
         
         except (KeyboardInterrupt, SystemExit):
             self.exit()
+            return
     
     def exit(self):
-        print '\b\bExiting, please wait...'
         try:
             while self.pipe_in.poll():  # Empty buffers
                 self.pipe_in.recv()
             self.pipe_in.send(dict(status='exiting'))
             self.pipe_in.close()
         except Exception, e:
-            print 'Got exception on exit: ', e
+            pass
         self.close_port()
-        raise SystemExit
+        print 'Writer exit'
 
 
 class WebsocketWriter(PatternWriter):
@@ -228,19 +250,18 @@ class WebsocketWriter(PatternWriter):
         
         r, g, b = frame[-3:]
         json_frame.extend(['"rgb(',str(r),',',str(g),',',str(b),')"]}'])
-        # Fast string concatenation trick
         json_data = ''.join(json_frame)
         
         self.client_push(json_data)
         
     def client_push(self, data):
+        #print 'writing data'
         try:
-            self.websocket.write_message(data)
+            self.websocket.send(str(data))
         except IOError:
-            print "Port closed"
+            print "Websocket closed"
             raise
-            
-    
+                
     def close_port(self):
         self.client_push('{"status":"exiting"}')
         time.sleep(1.0)

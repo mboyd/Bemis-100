@@ -1,4 +1,5 @@
 import tornado
+import tornadio2
 import tornado.httpserver
 
 import os, os.path, shutil, sys, re, json
@@ -40,13 +41,23 @@ def show_pattern(p):
         '</a>\n'
     return s
 
-class ClientSocket(tornado.websocket.WebSocketHandler):
-    def open(self):
-        bemis100.add_writer(WebsocketWriter(config['framerate'], self))
+class ClientSocket(tornadio2.SocketConnection):
+    writers = {}
+    
+    def on_open(self, request):
+        w = WebsocketWriter(config['framerate'], self)
+        self.writers[self] = w
+        bemis100.add_writer(w)
         print "WebSocket opened"
+        return True
+    
+    def on_message(self, message):
+        print "Socket.IO message: " + message
 
     def on_close(self):
         print "WebSocket closed"
+        bemis100.remove_writer(self.writers[self])
+        del self.writers[self]
 
 class Home(tornado.web.RequestHandler):
     def get(self):
@@ -180,13 +191,16 @@ if __name__ == '__main__':
         (r'/queue', Queue),
         (r'/pause', Pause),
         (r'/next', Next),
-        # (r'/upload', Upload),
-            (r"/socket", ClientSocket)]
-    application = tornado.web.Application(handlers=handlers, static_path='static')
-    server = tornado.httpserver.HTTPServer(application)
-    server.listen(5000)
+        # (r'/upload', Upload)
+        ] + tornadio2.TornadioRouter(ClientSocket).urls
+    
+    application = tornado.web.Application(handlers=handlers, static_path='static', socket_io_port=5000)
 
-    # application.listen(5000)
-    tornado.ioloop.IOLoop.instance().start()
-    sys.exit()
+    try:
+        server = tornadio2.SocketServer(application)
+    except KeyboardInterrupt:
+        print 'Exiting...'
+        bemis100.quit()
+        print 'bemis100 exit'
+        raise SystemExit
 

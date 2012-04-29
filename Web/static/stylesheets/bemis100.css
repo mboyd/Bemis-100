@@ -1,5 +1,6 @@
 html {
-  font-family: "Myriad Pro" sans-serif;
+  font-family: "Menlo", "Myriad Pro", sans-serif;
+  font-size: 14px;
   margin: 0;
   padding: 0;
   background: #202020;
@@ -13,6 +14,10 @@ body {
   padding: 0;
 }
 
+h1, h2 {
+  font-weight: normal;
+}
+
 div#content {
   padding-bottom: 5px;
   overflow: hidden;
@@ -20,7 +25,7 @@ div#content {
 
 div#header {
   width: 100%;
-  background-image: -webkit-gradient(
+  background-image: -moz-gradient(
       linear,
       right top,
       left top,
@@ -29,6 +34,7 @@ div#header {
   );
   border-radius: 10px;
   overflow: hidden;
+  margin-bottom: 10px;
 }
 
 div#header h1 {
@@ -65,7 +71,6 @@ div#liveview div#controls {
 div#controls a {
   text-decoration: none;
   color: #aaa;
-  font-weight: 90;
 }
 
 div#current {
@@ -81,9 +86,11 @@ div#current {
   }
 
 div#current h2 {
+  font-size: 20px;
   margin-bottom: 5px;
+  margin-left: 10px;
   width: 100%;
-  text-align: center;
+  text-align: left;
 }
 
 div#current ul {
@@ -108,15 +115,18 @@ div#queue {
   width: 130px;
   margin: 0 2%;
   float: left;
+  clear: left;
   background: #414141;
   border-radius: 10px;
 }
 
 
 div#queue h2 {
+  font-size: 20px;
   margin-bottom: 15px;
+  margin-left: 10px;
   width: 100%;
-  text-align: center;
+  text-align: left;
 }
 
 div#queue ul {
@@ -177,10 +187,16 @@ div#patterns h2 a {
   font-size: 12pt;
 }
 
-div#patterns img {
-  width: 200px;
-  height: 200px;
+div#patterns a {
+  display: block;
+  float: left;
+  text-decoration: none;
   margin: 15px;
+}
+
+div#patterns img {
+  width: 150px;
+  height: 150px;
   padding: 3px;
   background: #202020;
   border-radius: 5px;

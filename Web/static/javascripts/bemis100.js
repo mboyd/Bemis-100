@@ -68,21 +68,18 @@ $(document).ready(function() {
 });
 
 function connect() {
-	// console.log('connecting')
-	var wstype = window.WebSocket || window.MozWebSocket;
+	//console.log('connecting')
 
-  ws = new wstype("ws://localhost:5000/socket");
-  // ws = new WebSocket("ws://echo.websocket.org/");
+  ws = io.connect('/');
   
-  ws.onopen = function() {
+  ws.on('connect', function() {
     $('#connection').html('Status: connected');
     updateQueue();
 	// console.log('Opened WS connection')
-  }
+  });
   
-  ws.onmessage = function(e) {
-	  // console.log('got message');
-    var data = JSON.parse(e.data);
+  ws.on('message', function(e) {
+    var data = JSON.parse(e);
     
     if (data['status'] == 'ok') {
 		// console.log(data['frame']);
@@ -109,16 +106,16 @@ function connect() {
       
     } else if (data['status'] == 'exiting') {
       $('#framerate').html('');
-      ws.close();
+      //ws.close();
     }
-  };
+  });
   
-  ws.onclose = function() {
-	  // console.log('Closed WS connection')
+  ws.on('disconnect', function() {
+	  console.log('Closed WS connection')
     $('#connection').html('Status: disconnected');
     blank();
-    // setTimeout(connect, 2000);
-  }
+    setTimeout(connect, 2000);
+  });
 }
 
 function blank() {
@@ -132,7 +129,7 @@ function updateQueue() {
     var qh = '';
     
     if (queue.length == 0) {
-      qh = '<li>Queue empty</li>';
+      qh = '<li>empty</li>';
     }
     
     for (var i = 0; i < queue.length; i++) {
@@ -144,11 +141,12 @@ function updateQueue() {
         '</li>';
     }
     $('#queue ul').html(qh);
-	var current_pattern = result['current'];
-	var p = current_pattern[0];
-	var n = current_pattern[1];
-	if (n != 0) {
-		$('#current ul').html('<li><img src="/static/patterns/' + p + '">' + '</li>');
-	}
-  })
+	  var current_pattern = result['current'];
+	  var p = current_pattern[0];
+	  var n = current_pattern[1];
+	  if (n != 0) {
+		  $('#current ul').html('<li><img src="/static/patterns/' + p + '">' + '</li>');
+	  }
+	  setTimeout(updateQueue, 2000);
+  });
 }

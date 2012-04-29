@@ -2,5 +2,8 @@ ledweb/build
 *.pyc
 *.sublime-workspace
 .DS_Store
+*.o
+*.elf
+*.hex
 /build/
 /dist/

@@ -6,7 +6,8 @@ Firmware, software and web interface for the 1E Bemis100 lighting system.
 - PIL
 - numpy
 - pyaudio
-- web.py
+- tornado
+- TornadIO2 (use the development version from https://github.com/MrJoes/tornadio2)
 
 ##Usage
 Command line: `python run.py [-d device] [-f framerate] (pattern | pattern_dir) ...`
