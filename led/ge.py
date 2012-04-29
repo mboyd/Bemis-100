@@ -10,7 +10,7 @@ ACK_COUNT = 4
 class GEController(ledctl.LEDController):
     def __init__(self, device, framerate=60, num_lights=50, start_websocket=True):
         super(GEController, self).__init__(device, framerate=framerate, 
-                                    start_websocket=True)
+                                    start_websocket=start_websocket)
         
         self.num_lights = num_lights
         if not device == 'sim':
