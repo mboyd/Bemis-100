@@ -174,7 +174,7 @@ void setup()
 	while(Serial.available() == 0) {
 		brightness = XMAS_DEFAULT_INTENSITY;
 		for(i = 0; i < XMAS_LIGHT_COUNT; i++) {
-			xmas_set_color(i, brightness, xmas_color(0, 15-int(i*15/50), int(i*15/50)));
+			xmas_set_color(i, brightness, xmas_color(15-int(i*15/50),0, int(i*15/50)));
 		}
 	}
 }  
