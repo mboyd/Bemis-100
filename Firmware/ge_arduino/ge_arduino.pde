@@ -168,15 +168,13 @@ void handle_char(uint8_t c) {
 
 void setup()  
 {  
-    uint8_t i;
     xmas_fill_color(0,XMAS_LIGHT_COUNT,XMAS_DEFAULT_INTENSITY,XMAS_COLOR_BLACK); //Enumerate all the lights  
     Serial.begin(115200);
-	while(Serial.available() == 0) {
-		brightness = XMAS_DEFAULT_INTENSITY;
-		for(i = 0; i < XMAS_LIGHT_COUNT; i++) {
-			xmas_set_color(i, brightness, xmas_color(15-int(i*15/50),0, int(i*15/50)));
-		}
-	}
+    uint8_t i;
+      brightness = XMAS_DEFAULT_INTENSITY;
+  		for(i = 0; i < XMAS_LIGHT_COUNT; i++) {
+  			xmas_set_color(i, brightness, xmas_color(15-int(i*15/50),0, int(i*15/50)));
+  		}
 }  
  
    
