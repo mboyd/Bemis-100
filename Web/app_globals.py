@@ -7,11 +7,11 @@ config = {'pattern_dir' : 'static/patterns',
           'num_lights': 50}
 
 controller = LEDController(framerate=config['framerate'])
-ge_writer = GEWriter(device='/dev/tty.usbmodemfa1331',
-                     framerate=config['framerate'])
-controller.add_writer(ge_writer)
-bemis100_writer = Bemis100Writer(device='/dev/tty.usbserial-A400gmfr',
-                                 num_boards=83,
-                                 framerate=config['framerate'])
-controller.add_writer(bemis100_writer)
+# ge_writer = GEWriter(device='/dev/tty.usbmodemfa1331',
+#                      framerate=config['framerate'])
+# controller.add_writer(ge_writer)
+# bemis100_writer = Bemis100Writer(device='/dev/tty.usbserial-A400gmfr',
+#                                  num_boards=83,
+#                                  framerate=config['framerate'])
+# controller.add_writer(bemis100_writer)
 

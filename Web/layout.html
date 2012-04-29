@@ -15,15 +15,23 @@
 				<h1>Bemis 100</h1>
 			</div>
 
-			<div id='current'>
-				<h2>Playing</h2>
-				<ul>
-					<li>No pattern</li>
-				</ul>
+			<div id='left_bar'>
+				<div id='current'>
+					<h2>Playing</h2>
+					<ul>
+						<li>No pattern</li>
+					</ul>
+				</div>
+				<div id='queue'>
+					<h2>Queue</h2>
+					<ul>
+						<li>Loading...</li>
+					</ul>
+				</div>
 			</div>
 			<div id='liveview'>
 				<canvas id='canvas'>Waiting for data...</canvas>
-				<div id='controls'>
+				<div id='play_controls' class='controls'>
 					<a id='play_pause' class='play' href='#'>Play</a> &nbsp;&nbsp;|&nbsp;&nbsp;
 					<a class='next' href='#'>Next</a>
 				</div>
@@ -33,13 +41,18 @@
 				</div>
 			</div>
 
-			<div id='queue'>
-				<h2>Queue</h2>
-				<ul>
-					<li>Loading...</li>
-				</ul>
-			</div>
 
+			<div id='writers'>
+				<h2>Writers</h2>
+				<div id='writer_list'>
+					<ul>
+						<span>(No hardware writers active)</span>
+					</ul>
+				</div>
+				<div id='writer_controls' class='controls'>
+					<a id='add_writer' class='add_writer' href='#'>Add Writer</a>
+				</div>
+			</div>
 			<div id='patterns'>
 				<h2>Patterns <!--<a href='#'>New Pattern</a>--></h2>
 				{% autoescape None %}

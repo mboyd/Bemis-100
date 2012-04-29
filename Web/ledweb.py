@@ -15,6 +15,8 @@ from led.beat import BeatPatternRMS, BeatPattern
 from led.graphEq import GraphEqPattern
 from led.wave import WavePattern
 from led.new_wave import NewWavePattern
+from led.ge import GEWriter
+from led.bemis100 import Bemis100Writer
 
 
 websockets = []
@@ -85,7 +87,7 @@ class Home(tornado.web.RequestHandler):
         patterns_html = show_patterns(patterns)
         self.render("layout.html", title="Bemis100", patterns_html=patterns_html)
 
-class Add(tornado.web.RequestHandler):
+class AddPattern(tornado.web.RequestHandler):
     def get(self):
         params = self.request.arguments
         print params
@@ -157,6 +159,20 @@ class Next(tornado.web.RequestHandler):
         controller.next()
         self.write(json.dumps(dict(success=True)))
 
+class AddWriter(tornado.web.RequestHandler):
+    def get(self):
+        ge_writer = GEWriter(device='/dev/tty.usbmodemfa1331',
+                             framerate=config['framerate'])
+        print "Adding writer", ge_writer
+        controller.add_writer(ge_writer)
+        writer_list = []
+        for writer in controller.writers:
+            if not isinstance(writer, WebsocketWriter):
+                writer_list.append('%s on device %s' % (writer.__class__.__name__, writer.device))
+        self.write(json.dumps(writer_list))
+
+
+
 # class Upload(tornado.web.RequestHandler):
 #     def post(self):
 #         try:
@@ -181,10 +197,11 @@ class Next(tornado.web.RequestHandler):
 if __name__ == '__main__':
     handlers = [(r'/', Home),
         (r'/play', Play),
-        (r'/add', Add),
+        (r'/add', AddPattern),
         (r'/queue', Queue),
         (r'/pause', Pause),
         (r'/next', Next),
+        (r'/add_writer', AddWriter)
         # (r'/upload', Upload)
         ] + tornadio2.TornadioRouter(ClientSocket).urls
     

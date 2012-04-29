@@ -16,7 +16,7 @@ $(document).ready(function() {
   
   connect();
   
-  $('#controls a').click(function(evt) {
+  $('#play_controls a').click(function(evt) {
     evt.preventDefault();
     
     if ($(evt.target).hasClass('pause')) {  
@@ -42,6 +42,18 @@ $(document).ready(function() {
         updateQueue();
       });
     }
+  });
+
+  $('#add_writer').click(function(evt) {
+    evt.preventDefault();
+    $.getJSON('/add_writer', function(result) {
+      console.log(result);
+      var writer_list = ''
+      for (var i = 0; i < result.length; i++) {
+        writer_list += '<li>' + result[i] + '</li>'
+      }
+      $('#writer_list ul').html(writer_list);
+    });
   });
   
   $('#patterns a').click(function(evt) {
