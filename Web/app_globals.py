@@ -1,10 +1,9 @@
-# import sys, json
-# sys.path.append('..')
-
 from led.bemis100 import Bemis100
 from led.ge import GEController
 
-config = {'pattern_dir' : 'static/patterns'}
+config = {'pattern_dir' : 'static/patterns',
+          'framerate': 40,
+          'num_lights': 50}
 
 bemis100_config = {'device': '/dev/tty.usbserial-A400gmfr',
                    'num_boards': 83,

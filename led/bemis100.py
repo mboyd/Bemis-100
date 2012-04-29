@@ -2,12 +2,11 @@
 from __future__ import division
 
 import ledctl, pattern
-import serial
+import serial, threading
 
 class Bemis100(ledctl.LEDController):
     def __init__(self, device, framerate=30, num_boards=83, start_websocket=True):
-        super(Bemis100, self).__init__(device, framerate=framerate, 
-                                    start_websocket=start_websocket)
+        super(Bemis100, self).__init__(device, framerate=framerate)
         
         self.num_boards = num_boards
         if not device == 'sim':

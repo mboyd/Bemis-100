@@ -2,11 +2,11 @@ import tornado
 import tornadio2
 import tornado.httpserver
 
+import threading
 import os, os.path, shutil, sys, re, json
 
 sys.path.append('..')
 
-print "Running the import"
 from app_globals import bemis100, config
 
 from led.ledctl import WebsocketWriter
@@ -91,43 +91,37 @@ class Add(tornado.web.RequestHandler):
         print params
         if 'pattern' in params or 'beatpattern' in params \
                 or 'grapheqpattern' in params:
-            try:
-                if 'pattern' in params:
-                    pattern_name = params['pattern'][0]
-                    track_beat = 'beat' in params
-                    graph_eq = 'grapheq' in params
-                
-                p = None
-                if pattern_name.startswith("Specials"):
-                    if "new_wave" in pattern_name:
-                        p = NewWavePattern(num_lights = config['num_lights'])
-                    elif "wave" in pattern_name:
-                        p = WavePattern(num_lights = config['num_lights'])
-                else:
-                    pattern_path = os.path.join(config['pattern_dir'], pattern_name)
-                    if os.path.exists(pattern_path):
-                        p = Bemis100Pattern(pattern_path, config['num_lights'])
-
-                if p is not None:
-                    if track_beat:
-                        p = BeatPattern(p)
-                    elif graph_eq:
-                        p = GraphEqPattern(p)
-                    
-                    if 'num_times' in params:
-                        n = int(params['num_times'])
-                    else:
-                        n = -1
-                    
-                    bemis100.add_pattern(p, n, name=pattern_name)
-                    print "Added pattern:", pattern_name
-                else:
-                    print "Invalid pattern name:", pattern_name
+            if 'pattern' in params:
+                pattern_name = params['pattern'][0]
+                track_beat = 'beat' in params
+                graph_eq = 'grapheq' in params
             
-            except Exception as e:
-                print "caught error in Play"
-                self.write(json.dumps(dict(success=False, error=str(e))))
-        
+            p = None
+            if pattern_name.startswith("Specials"):
+                if "new_wave" in pattern_name:
+                    p = NewWavePattern(num_lights = config['num_lights'])
+                elif "wave" in pattern_name:
+                    p = WavePattern(num_lights = config['num_lights'])
+            else:
+                pattern_path = os.path.join(config['pattern_dir'], pattern_name)
+                if os.path.exists(pattern_path):
+                    p = Bemis100Pattern(pattern_path, config['num_lights'])
+
+            if p is not None:
+                if track_beat:
+                    p = BeatPattern(p)
+                elif graph_eq:
+                    p = GraphEqPattern(p)
+                
+                if 'num_times' in params:
+                    n = int(params['num_times'])
+                else:
+                    n = -1
+                
+                bemis100.add_pattern(p, n, name=pattern_name)
+                print "Added pattern:", pattern_name
+            else:
+                print "Invalid pattern name:", pattern_name
         # bemis100.play()
         self.write(json.dumps(dict(success=True)))
         
@@ -202,5 +196,7 @@ if __name__ == '__main__':
         print 'Exiting...'
         bemis100.quit()
         print 'bemis100 exit'
-        raise SystemExit
+        print "active threads", threading._active
+        sys.exit()
+
 

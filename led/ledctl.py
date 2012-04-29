@@ -1,11 +1,11 @@
 #!/usr/bin/env python2.6
 from __future__ import division
 
+from serial import SerialException
 import multiprocessing, threading, time, socket, re, struct, hashlib, copy, base64, sys
 
 class LEDController(object):
-    def __init__(self, device, framerate=30, start_websocket=True, \
-                    websocket=None):
+    def __init__(self, device, framerate=30, websocket=None):
         
         self.frame_dt = 1.0 / framerate
         self.device = device
@@ -24,10 +24,8 @@ class LEDController(object):
         
         self._next = threading.Event()    # If set, skip to the next pattern
         
-        # if start_websocket:
-        #     self.add_writer(WebsocketWriter(framerate, websocket))
-        
         self.queue_thread = threading.Thread(target=self.pump_queue)
+        self.queue_thread.daemon = True
         self.queue_thread.start()
             
     def get_current_pattern(self):
@@ -126,7 +124,7 @@ class LEDController(object):
             self.current_pattern = {'pattern': pattern, 'name': name, 'num_times': n}
             self.queue_lock.release()
             
-            if pattern is not None:
+            if pattern is not None and pattern != [[]]:
                 self.draw_pattern(pattern, n)
             else:
                 print "Controller exiting..."
@@ -205,7 +203,12 @@ class PatternWriter(threading.Thread):
         self.pipe_out.send(pattern_data)
     
     def run(self):
-        self.open_port()
+        try:
+            self.open_port()
+        except SerialException, e:
+            print "Couldn't open port, exiting writer"
+            return
+
         try:
             while True:
                 frame = self.pipe_in.recv()
