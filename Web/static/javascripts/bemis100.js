@@ -15,6 +15,9 @@ $(document).ready(function() {
   lastTime = (new Date).getTime();
   
   connect();
+
+  updateDevices();
+  updateWriters();
   
   $('#play_controls a').click(function(evt) {
     evt.preventDefault();
@@ -46,16 +49,14 @@ $(document).ready(function() {
 
   $('#add_writer').click(function(evt) {
     evt.preventDefault();
-    $.getJSON('/add_writer', function(result) {
-      console.log(result);
-      var writer_list = ''
-      for (var i = 0; i < result.length; i++) {
-        writer_list += '<li>' + result[i] + '</li>'
-      }
-      $('#writer_list ul').html(writer_list);
-    });
+    var selects = $('#writer_controls select');
+    var writer_type = selects[0].options[selects[0].selectedIndex].text;
+    var port = selects[1].options[selects[1].selectedIndex].text;
+    $.getJSON('/add_writer', {'writer_type': writer_type, 'port': port}, function(result) {});
+    updateWriters();
   });
-  
+
+
   $('#patterns a').click(function(evt) {
     evt.preventDefault();
     
@@ -127,6 +128,37 @@ function connect() {
     $('#connection').html('Status: disconnected');
     blank();
     setTimeout(connect, 2000);
+  });
+}
+
+function updateDevices() {
+  $.getJSON('/device_list', function(result) {
+    var writers = result.writers;
+    var ports = result.ports;
+    var form_html = 'Type: <select name="writers">';
+    for (var i=0; i<writers.length; i++) {
+      form_html += '<option value="' + writers[i] + '">' + writers[i] + '</option>';
+    }
+    form_html += '</select> Port: <select name="ports">';
+    for (var i=0; i<ports.length; i++) {
+      form_html += '<option value="' + ports[i] + '">' + ports[i] + '</option>';
+    }
+    // form_html += '</select> <input type="submit" value="Add Writer"/>';
+    form_html += '</select>';
+    $('#writer_controls').html(form_html);
+    console.log(writers);
+    console.log(ports);
+  });
+}
+
+function updateWriters() {
+  $.getJSON('/get_writers', function(result) {
+    console.log(result);
+    var writer_list = ''
+    for (var i = 0; i < result.length; i++) {
+      writer_list += '<li>' + result[i] + '</li>'
+    }
+    $('#writer_list ul').html(writer_list);
   });
 }
 

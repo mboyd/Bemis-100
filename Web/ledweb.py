@@ -4,10 +4,11 @@ import tornado.httpserver
 
 import threading
 import os, os.path, shutil, sys, re, json
+import serial.tools.list_ports
 
 sys.path.append('..')
 
-from app_globals import controller, config
+from app_globals import controller, config, writer_types
 
 from led.ledctl import WebsocketWriter
 from led.pattern import Bemis100Pattern
@@ -159,19 +160,32 @@ class Next(tornado.web.RequestHandler):
         controller.next()
         self.write(json.dumps(dict(success=True)))
 
-class AddWriter(tornado.web.RequestHandler):
+class GetWriters(tornado.web.RequestHandler):
     def get(self):
-        ge_writer = GEWriter(device='/dev/tty.usbmodemfa1331',
-                             framerate=config['framerate'])
-        print "Adding writer", ge_writer
-        controller.add_writer(ge_writer)
         writer_list = []
         for writer in controller.writers:
             if not isinstance(writer, WebsocketWriter):
                 writer_list.append('%s on device %s' % (writer.__class__.__name__, writer.device))
         self.write(json.dumps(writer_list))
 
+class AddWriter(tornado.web.RequestHandler):
+    def get(self):
+        params = self.request.arguments
+        writer_class = writer_types[params['writer_type'][0]]['class']
+        writer_params = writer_types[params['writer_type'][0]]['defaults']
+        device = params['port'][0]
+        new_writer = writer_class(device, **writer_params)
+        print "Adding writer", new_writer
+        controller.add_writer(new_writer)
 
+class DeviceList(tornado.web.RequestHandler):
+    """
+    List serial devices which are available for attaching hardware.
+    """
+    def get(self):
+        writers = writer_types.keys()
+        ports = [port[0] for port in serial.tools.list_ports.comports()]
+        self.write(json.dumps({'writers':writers, 'ports':ports}))
 
 # class Upload(tornado.web.RequestHandler):
 #     def post(self):
@@ -201,7 +215,9 @@ if __name__ == '__main__':
         (r'/queue', Queue),
         (r'/pause', Pause),
         (r'/next', Next),
-        (r'/add_writer', AddWriter)
+        (r'/add_writer', AddWriter),
+        (r'/device_list', DeviceList),
+        (r'/get_writers', GetWriters)
         # (r'/upload', Upload)
         ] + tornadio2.TornadioRouter(ClientSocket).urls
     
