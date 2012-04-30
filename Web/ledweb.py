@@ -25,7 +25,7 @@ if platform.system() == "Windows":
     import _winreg as winreg
     import itertools
 
-    def comports():
+    def list_com_ports():
         """ Uses the Win32 registry to return an
             iterator of serial (COM) ports
             existing on this computer.
@@ -44,6 +44,8 @@ if platform.system() == "Windows":
                 break
 else:
     from serial.tools.list_ports import comports
+    def list_com_ports():
+        return (i[0] for i in comports())
         
 
 websockets = []
@@ -210,7 +212,7 @@ class DeviceList(tornado.web.RequestHandler):
     """
     def get(self):
         writers = writer_types.keys()
-        ports = [i for i in comports()]
+        ports = list(list_com_ports())
         print ports
         self.write(json.dumps({'writers':writers, 'ports':ports}))
 
