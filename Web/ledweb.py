@@ -2,9 +2,10 @@ import tornado
 import tornadio2
 import tornado.httpserver
 
+
 import threading
 import os, os.path, shutil, sys, re, json
-import serial.tools.list_ports
+
 
 sys.path.append('..')
 
@@ -19,6 +20,31 @@ from led.new_wave import NewWavePattern
 from led.ge import GEWriter
 from led.bemis100 import Bemis100Writer
 
+import platform
+if platform.system() == "Windows":
+    import _winreg as winreg
+    import itertools
+
+    def comports():
+        """ Uses the Win32 registry to return an
+            iterator of serial (COM) ports
+            existing on this computer.
+        """
+        path = 'HARDWARE\\DEVICEMAP\\SERIALCOMM'
+        try:
+            key = winreg.OpenKey(winreg.HKEY_LOCAL_MACHINE, path)
+        except WindowsError:
+            raise IterationError
+
+        for i in itertools.count():
+            try:
+                val = winreg.EnumValue(key, i)
+                yield str(val[1])
+            except EnvironmentError:
+                break
+else:
+    from serial.tools.list_ports import comports
+        
 
 websockets = []
 
@@ -184,7 +210,8 @@ class DeviceList(tornado.web.RequestHandler):
     """
     def get(self):
         writers = writer_types.keys()
-        ports = [port[0] for port in serial.tools.list_ports.comports()]
+        ports = [i for i in comports()]
+        print ports
         self.write(json.dumps({'writers':writers, 'ports':ports}))
 
 # class Upload(tornado.web.RequestHandler):
