@@ -45,7 +45,8 @@
 #define XMAS_PORT	PORTD
 #define XMAS_DDR	DDRD
 
-#define FRAME_SIZE 32
+// This must match the value in ge.py
+#define FRAME_SIZE 128
 
 #define DIAL_PIN A0
 int dial_value = 0;
@@ -160,9 +161,10 @@ void handle_char(uint8_t c) {
   								current_frame[i*4 + 2]>>4, current_frame[i*4 + 3]>>4));
     }
           color_index = 0;
-    for(i=0; i<FRAME_SIZE; i++) {
-      Serial.write(current_frame[i]);
-    }
+    Serial.write('B');
+    // for(i=0; i<FRAME_SIZE; i++) {
+    //   Serial.write(current_frame[i]);
+    // }
   }
   // if (bytes_since_ack >= 4) {
   //   bytes_since_ack = 0;

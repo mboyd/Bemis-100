@@ -4,8 +4,8 @@ import ledctl, pattern
 import serial
 import time
 
-
-FRAME_SIZE = 32
+# This must match the value in the ge_arduino.pde firmware
+FRAME_SIZE = 128
 
 class GEWriter(ledctl.PatternWriter):
     
@@ -46,9 +46,10 @@ class GEWriter(ledctl.PatternWriter):
                 self.frame_buffer.extend(to_write)
                 if len(self.frame_buffer) == FRAME_SIZE:
                     self.port.write(self.frame_buffer)
-                    received = self.port.read(FRAME_SIZE)
-                    if self.frame_buffer != received:
-                        print self.frame_buffer, received
+                    # received = self.port.read(FRAME_SIZE)
+                    # if self.frame_buffer != received:
+                    #     print self.frame_buffer, received
+                    self.port.read(1)
                     self.frame_buffer = bytearray([])
                 # self.port.write(to_write)
                 # time.sleep(.0012) #give the controller enough time to write the new data
