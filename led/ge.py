@@ -51,17 +51,6 @@ class GEWriter(ledctl.PatternWriter):
                         print self.frame_buffer, received
                     self.frame_buffer = bytearray([])
                 # self.port.write(to_write)
-                # print "written", count
-                # self.port.read(1)
-                # self.bytes_since_ack += 4
-                # if self.bytes_since_ack >= ACK_COUNT:
-                    # print "waiting for ack"
-                    # c = self.port.read(1)
-                    # print ord(c)
-                    # self.bytes_since_ack = 0
-                    # assert c == 'B', c
-                    # c = self.port.read(1)
-                    # assert c == '', c
                 # time.sleep(.0012) #give the controller enough time to write the new data
         self.last_frame = frame
  
