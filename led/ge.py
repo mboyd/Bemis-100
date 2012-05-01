@@ -5,7 +5,7 @@ import serial
 import time
 
 
-ACK_COUNT = 4
+FRAME_SIZE = 32
 
 class GEWriter(ledctl.PatternWriter):
     
@@ -16,10 +16,12 @@ class GEWriter(ledctl.PatternWriter):
         self.port = None
         self.num_lights = num_lights
         self.last_frame = None
+        self.frame_buffer = bytearray([])
 
 
     def open_port(self):
         self.port = serial.Serial(port=self.device,
+                # baudrate=9600,
                 baudrate=115200,
                 bytesize=serial.EIGHTBITS,
                 stopbits=serial.STOPBITS_ONE,
@@ -27,7 +29,7 @@ class GEWriter(ledctl.PatternWriter):
                 timeout=2,
                 writeTimeout=0)
         time.sleep(3)
-        self.bytes_since_ack = 0
+        # self.bytes_since_ack = 0
         self.blank()
 
     def close_port(self):
@@ -37,19 +39,27 @@ class GEWriter(ledctl.PatternWriter):
 
     def draw_frame(self, frame):
         # self.port.write('B')
+        last_write = time.time()
         for i in range(0, len(frame), 3):
             if self.last_frame is None or frame[i:i+3] != self.last_frame[i:i+3]:
                 to_write = chr(i//3) + frame[i:i+3]
-                self.port.write(to_write)
+                self.frame_buffer.extend(to_write)
+                if len(self.frame_buffer) == FRAME_SIZE:
+                    self.port.write(self.frame_buffer)
+                    received = self.port.read(FRAME_SIZE)
+                    if self.frame_buffer != received:
+                        print self.frame_buffer, received
+                    self.frame_buffer = bytearray([])
+                # self.port.write(to_write)
                 # print "written", count
                 # self.port.read(1)
-                self.bytes_since_ack += 4
-                if self.bytes_since_ack >= ACK_COUNT:
+                # self.bytes_since_ack += 4
+                # if self.bytes_since_ack >= ACK_COUNT:
                     # print "waiting for ack"
-                    c = self.port.read(1)
+                    # c = self.port.read(1)
                     # print ord(c)
-                    self.bytes_since_ack = 0
-                    assert c == 'B', c
+                    # self.bytes_since_ack = 0
+                    # assert c == 'B', c
                     # c = self.port.read(1)
                     # assert c == '', c
                 # time.sleep(.0012) #give the controller enough time to write the new data
