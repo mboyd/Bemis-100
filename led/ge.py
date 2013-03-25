@@ -8,10 +8,10 @@ import time
 FRAME_SIZE = 128
 
 class GEWriter(ledctl.PatternWriter):
-    
+
     def __init__(self, device, num_lights=50, framerate=30):
         super(GEWriter, self).__init__(framerate)
-        
+
         self.device = device
         self.port = None
         self.num_lights = num_lights
@@ -41,7 +41,8 @@ class GEWriter(ledctl.PatternWriter):
         # self.port.write('B')
         last_write = time.time()
         for i in range(0, len(frame), 3):
-            if self.last_frame is None or frame[i:i+3] != self.last_frame[i:i+3]:
+            # if self.last_frame is None or frame[i:i+3] != self.last_frame[i:i+3]:
+            if True:
                 to_write = chr(i//3) + frame[i:i+3]
                 self.frame_buffer.extend(to_write)
                 if len(self.frame_buffer) == FRAME_SIZE:
@@ -54,7 +55,7 @@ class GEWriter(ledctl.PatternWriter):
                 # self.port.write(to_write)
                 # time.sleep(.0012) #give the controller enough time to write the new data
         self.last_frame = frame
- 
+
     def blank(self):
         return
         '''Turn off all the LEDs. We do this before startup to make sure the
@@ -63,4 +64,4 @@ class GEWriter(ledctl.PatternWriter):
         f = bytearray(reduce(str.__add__, [chr(i) + '\x00\x00\x00' for i in range(self.num_lights)]))
         print repr(f)
         self.draw_frame(f)
- 
+
