@@ -194,22 +194,26 @@ void setup()
     j = 0;
     uint8_t index;
     uint8_t k;
-    while (1) {
-      if (j >= XMAS_LIGHT_COUNT) {
-        j = 0;
-      }
-  		for(i = 0; i < XMAS_LIGHT_COUNT; i++) {
-        if (Serial.available() > 0) {
-          break;
-        }
-        index = (i + j) % XMAS_LIGHT_COUNT;
-        xmas_set_color(i, brightness, xmas_color(initial_values[index][0], initial_values[index][1], initial_values[index][2]));
-      }
-      j++;
-      if (Serial.available() > 0) {
-        break;
-      }
+    for(i = 0; i < XMAS_LIGHT_COUNT; i++) {
+      index = (i + j) % XMAS_LIGHT_COUNT;
+      xmas_set_color(i, brightness, xmas_color(initial_values[index][0], initial_values[index][1], initial_values[index][2]));
     }
+    // while (1) {
+    //   if (j >= XMAS_LIGHT_COUNT) {
+    //     j = 0;
+    //   }
+  		// for(i = 0; i < XMAS_LIGHT_COUNT; i++) {
+    //     if (Serial.available() > 0) {
+    //       break;
+    //     }
+    //     index = (i + j) % XMAS_LIGHT_COUNT;
+    //     xmas_set_color(i, brightness, xmas_color(initial_values[index][0], initial_values[index][1], initial_values[index][2]));
+    //   }
+    //   j++;
+    //   if (Serial.available() > 0) {
+    //     break;
+    //   }
+    // }
 }  
  
    
