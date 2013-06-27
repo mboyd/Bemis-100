@@ -1,11 +1,12 @@
 #!/usr/bin/env python2.6
 from __future__ import division
 
-import Image as im
+# import Image as im
+import PIL.Image as im
 
 '''This program generates patterns for the Bemis100 lighting system. A pattern
 is derived from an image file, which will be played back one row at a time on
-the Bemis100. 
+the Bemis100.
 '''
 
 class Bemis100Pattern:
@@ -25,9 +26,9 @@ class Bemis100Pattern:
             (width,height) = image.size
 
         image = image.convert('RGB')
-        
+
         self.image_data = []
-        
+
         try:
             while True:
                 frame = image.getdata()
@@ -35,14 +36,14 @@ class Bemis100Pattern:
                     row_pix = (frame[i] for i in range(r*width, (r+1)*width))
                     row_raw = (b for pix in row_pix for b in pix)
                     row = bytearray((c for c in row_raw))
-                    
+
                     self.image_data.append(row)
-                
+
                 image.seek(image.tell()+1)
-        
+
         except EOFError:
             pass
-            
+
     def __iter__(self):
         return iter(self.image_data)
 
