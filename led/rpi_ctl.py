@@ -47,7 +47,7 @@ class RaspberryPiWriter(ledctl.PatternWriter):
         GPIO.output(PIN, False)
         time.sleep(40/1e6)
 
-    def set_color(led, intensity, color):
+    def set_color(self, led, intensity, color):
         addr_b = np.unpackbits(np.array([led], dtype=np.uint8))[2:]
         intensity_b = np.unpackbits(np.array([intensity], dtype=np.uint8))
         color_b = itertools.chain(*[np.unpackbits(np.array([c>>4], dtype=np.uint8))[4:] for c in reversed(color)])
