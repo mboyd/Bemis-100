@@ -7,3 +7,4 @@ ledweb/build
 *.hex
 /build/
 /dist/
+*.so
