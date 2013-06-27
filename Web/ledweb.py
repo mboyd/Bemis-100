@@ -46,7 +46,7 @@ else:
     from serial.tools.list_ports import comports
     def list_com_ports():
         return (i[0] for i in comports())
-        
+
 
 websockets = []
 
@@ -74,14 +74,14 @@ def show_pattern(p):
 
 class ClientSocket(tornadio2.SocketConnection):
     writers = {}
-    
+
     def on_open(self, request):
         w = WebsocketWriter(config['framerate'], self)
         self.writers[self] = w
         controller.add_writer(w)
         print "WebSocket opened"
         return True
-    
+
     def on_message(self, message):
         print "Socket.IO message: " + message
 
@@ -92,7 +92,7 @@ class ClientSocket(tornadio2.SocketConnection):
 
 class Home(tornado.web.RequestHandler):
     def get(self):
-        
+
         def find_patterns(d):
             patterns = []
 
@@ -105,11 +105,11 @@ class Home(tornado.web.RequestHandler):
                     if re.match('^[^\.]+\.(gif|png|jpg|jpeg|tiff|bmp)$', f, re.I):
                         p.append(os.path.join(disp_root, f))
                 patterns.append((disp_root, p))
-            
+
             patterns[:1] = patterns[0][1]    # Don't return relpath for root dir
-            
+
             return patterns
-        
+
         patterns = find_patterns(config['pattern_dir'])
 
 
@@ -126,7 +126,7 @@ class AddPattern(tornado.web.RequestHandler):
                 pattern_name = params['pattern'][0]
                 track_beat = 'beat' in params
                 graph_eq = 'grapheq' in params
-            
+
             p = None
             if pattern_name.startswith("Specials"):
                 if "new_wave" in pattern_name:
@@ -143,22 +143,22 @@ class AddPattern(tornado.web.RequestHandler):
                     p = BeatPattern(p)
                 elif graph_eq:
                     p = GraphEqPattern(p)
-                
+
                 if 'num_times' in params:
                     n = int(params['num_times'])
                 else:
                     n = -1
-                
+
                 controller.add_pattern(p, n, name=pattern_name)
                 print "Added pattern:", pattern_name
             else:
                 print "Invalid pattern name:", pattern_name
         # controller.play()
         self.write(json.dumps(dict(success=True)))
-        
+
 
 class Queue(tornado.web.RequestHandler):
-    
+
     def get(self):
         current_pattern = controller.get_current_pattern()
         if current_pattern is not None:
@@ -224,17 +224,17 @@ class DeviceList(tornado.web.RequestHandler):
 #             fn = f.filename
 #             if '/' in fn:
 #                 fn = fn[fn.rfind('/')+1:]
-                
+
 #             base_path = config['pattern_dir']
 #             path = os.path.join(base_path, fn)
-            
+
 #             new_f = open(path, 'w')
 #             shutil.copyfileobj(f.file, new_f)
 #             f.file.close()
 #             new_f.close()
 #         except Exception:
 #             raise
-        
+
 #         raise web.Found('/')
 
 if __name__ == '__main__':
@@ -249,7 +249,7 @@ if __name__ == '__main__':
         (r'/get_writers', GetWriters)
         # (r'/upload', Upload)
         ] + tornadio2.TornadioRouter(ClientSocket).urls
-    
+
     application = tornado.web.Application(handlers=handlers, static_path='static', socket_io_port=5000)
 
     try:
