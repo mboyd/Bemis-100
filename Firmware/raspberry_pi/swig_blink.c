@@ -1,4 +1,5 @@
 #include <wiringPi.h>
+#include <stdint.h>
 
 #define PIN 1
 
@@ -16,6 +17,8 @@ int blink(int x)
 }
 
 static inline void write_begin() {
+	wiringPiSetup();
+	pinMode(PIN, OUTPUT);
 	digitalWrite(PIN, HIGH); 
 	delayMicrosecondsHard(10);
 	digitalWrite(PIN, LOW);
@@ -47,7 +50,7 @@ write_end() {
 
 int set_color(int led, int intensity, int r, int g, int b) {
 	uint16_t color = ((r)+((g)<<4)+((b)<<8));
-	int i = 0;
+	int i;
 	write_begin();
 	for (i=6; i; i--, (led <<= 1)) {
 		if (led&(1<<5)) {
