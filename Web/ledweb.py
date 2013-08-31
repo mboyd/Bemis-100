@@ -1,17 +1,13 @@
 import tornado
-import tornadio2
+# import tornadio2
 import tornado.httpserver
-
-
 import threading
 import os, os.path, shutil, sys, re, json
-
 
 sys.path.append('..')
 
 from app_globals import controller, config, writer_types
 
-from led.ledctl import WebsocketWriter
 from led.pattern import Bemis100Pattern
 from led.beat import BeatPatternRMS, BeatPattern
 from led.graphEq import GraphEqPattern
@@ -44,14 +40,9 @@ if platform.system() == "Windows":
                 break
 else:
     from serial.tools.list_ports import comports
+
     def list_com_ports():
         return (i[0] for i in comports())
-
-
-websockets = []
-
-# g = {'config' : config, 'type' : type, 'path_join' : os.path.join}
-# render = web.template.render('templates/', base='layout', globals=g)
 
 def show_patterns(patterns):
     s = ''

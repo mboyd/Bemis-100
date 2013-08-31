@@ -5,14 +5,14 @@ import ledctl, pattern
 import serial, threading
 
 class Bemis100Writer(ledctl.PatternWriter):
-    
+
     def __init__(self, device, num_boards, framerate):
         super(Bemis100Writer, self).__init__(framerate)
-        
+
         self.device = device
         self.port = None
         self.num_boards = num_boards
-    
+
     def open_port(self):
         self.port = serial.Serial(port=self.device,
                 baudrate=115200,
@@ -30,7 +30,7 @@ class Bemis100Writer(ledctl.PatternWriter):
     def draw_frame(self, frame):
         self.port.write('B')
         self.port.write(bytearray([encode_char(c) for c in frame]))
- 
+
     def blank(self):
         '''Turn off all the LEDs. We do this before startup to make sure the
         power supplies are not loaded by the LEDs when they come online.'''
@@ -59,7 +59,7 @@ def _encode_char(value):
     integer value. Our firmware only implements 8 shades, so we indicate the
     brightness of a pixel by the number of 1s in an 8-bit string, which we
     transmit as a single character."""
-    
+
     for i in range(len(PWM_CUTOFFS)):
         if value <= PWM_CUTOFFS[i]:
             return PWM_CUTOFFS[i]
