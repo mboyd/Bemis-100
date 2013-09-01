@@ -1,21 +1,4 @@
-var canvas;
-var ctx;
-var ws;
-
-var frameCount;
-var lastTime;
-
 $(document).ready(function() {
-
-  canvas = document.getElementById('canvas');
-  ctx = canvas.getContext('2d');
-  blank();
-
-  frameCount = 0;
-  lastTime = (new Date).getTime();
-
-  // connect();
-
   updateDevices();
   updateWriters();
 
@@ -38,7 +21,7 @@ $(document).ready(function() {
       $(evt.target).removeClass('play');
       $(evt.target).addClass('pause');
       $(evt.target).html('Pause');
-	  updateQueue();
+    updateQueue();
 
     } else if ($(evt.target).hasClass('next')) {
       $.getJSON('/next', function(result) {
@@ -69,10 +52,6 @@ $(document).ready(function() {
       params.beat = true;
     }
 
-    // $('#play_pause').removeClass('pause');
-    // $('#play_pause').addClass('play');
-    // $('#play_pause').html('Play');
-
     $.getJSON('/add', params, function(result) {
       updateQueue();
     });
@@ -80,56 +59,6 @@ $(document).ready(function() {
 
 });
 
-function connect() {
-	//console.log('connecting')
-
-  ws = io.connect('/');
-
-  ws.on('connect', function() {
-    $('#connection').html('Status: connected');
-    updateQueue();
-	// console.log('Opened WS connection')
-  });
-
-  ws.on('message', function(e) {
-    var data = JSON.parse(e);
-
-    if (data['status'] == 'ok') {
-		// console.log(data['frame']);
-      var frame = data['frame'];
-      var pixelWidth = canvas.width / frame.length;
-      var height = canvas.height;
-
-      for (var i = 0; i < frame.length; i++) {
-        ctx.fillStyle = frame[i];
-        ctx.fillRect(i*pixelWidth, 0, pixelWidth, height);
-      }
-
-      if (frameCount == 30) {
-        frameCount = 0;
-        var t = (new Date).getTime();
-        var dt = t - lastTime;
-        var fr = 30 / (dt / 1000.0);
-        $('#framerate').html('Framerate: ' + fr.toFixed(2) + ' fps');
-
-        lastTime = t;
-      }
-
-      frameCount += 1;
-
-    } else if (data['status'] == 'exiting') {
-      $('#framerate').html('');
-      //ws.close();
-    }
-  });
-
-  ws.on('disconnect', function() {
-	  console.log('Closed WS connection')
-    $('#connection').html('Status: disconnected');
-    blank();
-    setTimeout(connect, 2000);
-  });
-}
 
 function updateDevices() {
   $.getJSON('/device_list', function(result) {
@@ -140,7 +69,7 @@ function updateDevices() {
       form_html += '<option value="' + writers[i] + '">' + writers[i] + '</option>';
     }
     form_html += '</select> Port: <select name="ports">';
-    for (var i=0; i<ports.length; i++) {
+    for (i=0; i<ports.length; i++) {
       form_html += '<option value="' + ports[i] + '">' + ports[i] + '</option>';
     }
     // form_html += '</select> <input type="submit" value="Add Writer"/>';
@@ -154,43 +83,40 @@ function updateDevices() {
 function updateWriters() {
   $.getJSON('/get_writers', function(result) {
     console.log(result);
-    var writer_list = ''
+    var writer_list = '';
     for (var i = 0; i < result.length; i++) {
-      writer_list += '<li>' + result[i] + '</li>'
+      writer_list += '<li>' + result[i] + '</li>';
     }
     $('#writer_list ul').html(writer_list);
   });
-}
-
-function blank() {
-  ctx.fillStyle = 'rgb(0,0,0)';
-  ctx.fillRect(0, 0, canvas.width, canvas.height);
 }
 
 function updateQueue() {
   $.getJSON('/queue', function(result) {
     var queue = result['queue'];
     var qh = '';
+    var p;
+    var n;
 
-    if (queue.length == 0) {
+    if (queue.length === 0) {
       qh = '<li>empty</li>';
     }
 
     for (var i = 0; i < queue.length; i++) {
-      var p = queue[i][0];
-      var n = queue[i][1];
+      p = queue[i].name;
+      n = queue[i].reps;
       qh +=
         '<li><img src="/static/patterns/' + p + '">' +
 
         '</li>';
     }
     $('#queue ul').html(qh);
-	  var current_pattern = result['current'];
-	  var p = current_pattern[0];
-	  var n = current_pattern[1];
-	  if (n != 0) {
-		  $('#current ul').html('<li><img src="/static/patterns/' + p + '">' + '</li>');
-	  }
-	  setTimeout(updateQueue, 2000);
+    var current = result['current'];
+    p = current.name;
+    n = current.reps;
+    if (n !== 0) {
+      $('#current ul').html('<li><img src="/static/patterns/' + p + '">' + '</li>');
+    }
+  setTimeout(updateQueue, 2000);
   });
 }

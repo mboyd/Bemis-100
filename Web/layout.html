@@ -4,9 +4,9 @@
 		<title>LEDWeb Alpha</title>
 		<link href='/static/stylesheets/bemis100.css' rel='stylesheet' type='text/css'>
 		<link href='http://fonts.googleapis.com/css?family=Droid+Sans' rel='stylesheet' type='text/css'>
-		<script src='/static/javascripts/jquery-1.5.min.js'></script>
-		<script src='/static/javascripts/bemis100.js'></script>
-		<script src='/static/javascripts/socket.io.min.js'></script>
+		<script src='/static/js/jquery-1.5.min.js'></script>
+		<script src='/static/js/bemis100.js'></script>
+		<script src='/static/js/socket.io.min.js'></script>
 	</head>
 
 	<body>  
@@ -29,19 +29,10 @@
 					</ul>
 				</div>
 			</div>
-			<div id='liveview'>
-				<canvas id='canvas'>Waiting for data...</canvas>
-				<div id='play_controls' class='controls'>
-					<a id='play_pause' class='play' href='#'>Play</a> &nbsp;&nbsp;|&nbsp;&nbsp;
-					<a class='next' href='#'>Next</a>
-				</div>
-				<div id='status'>
-					<span id='connection'>Status: disconnected</span>&nbsp;&nbsp;
-					<span id='framerate'></span>
-				</div>
+			<div id='play_controls' class='controls'>
+              <a id='play_pause' class='play' href='#'>Play</a> &nbsp;&nbsp;|&nbsp;&nbsp;
+              <a class='next' href='#'>Next</a>
 			</div>
-
-
 			<div id='writers'>
 				<h2>Writers</h2>
 				<div id='writer_list'>

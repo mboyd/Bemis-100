@@ -1,13 +1,14 @@
-import tornado
-# import tornadio2
-import tornado.httpserver
+import tornado.web
+import tornado.ioloop
 import threading
-import os, os.path, shutil, sys, re, json
+import os
+import re
+import json
+import platform
 
+import sys
 sys.path.append('..')
-
 from app_globals import controller, config, writer_types
-
 from led.pattern import Bemis100Pattern
 from led.beat import BeatPatternRMS, BeatPattern
 from led.graphEq import GraphEqPattern
@@ -16,7 +17,6 @@ from led.new_wave import NewWavePattern
 from led.ge import GEWriter
 from led.bemis100 import Bemis100Writer
 
-import platform
 if platform.system() == "Windows":
     import _winreg as winreg
     import itertools
@@ -42,16 +42,16 @@ else:
     from serial.tools.list_ports import comports
 
     def list_com_ports():
-        return (i[0] for i in comports())
+        return sorted([i[0] for i in comports()],key=lambda x: 'usbmodem' in x, reverse=True)
 
 def show_patterns(patterns):
     s = ''
     for e in patterns:
         if type(e) is tuple:
             s += '<div class="pattern_folder">' + \
-                    '<h3>' + e[0] + '</h3>' + \
-                    show_patterns(e[1]) + \
-                  '</div>'
+                 '<h3>' + e[0] + '</h3>' + \
+                 show_patterns(e[1]) + \
+                 '</div>'
         else:
             s += show_pattern(e)
     return s
@@ -62,24 +62,6 @@ def show_pattern(p):
         'src="'+os.path.join(config['pattern_dir'],p)+'">\n' + \
         '</a>\n'
     return s
-
-class ClientSocket(tornadio2.SocketConnection):
-    writers = {}
-
-    def on_open(self, request):
-        w = WebsocketWriter(config['framerate'], self)
-        self.writers[self] = w
-        controller.add_writer(w)
-        print "WebSocket opened"
-        return True
-
-    def on_message(self, message):
-        print "Socket.IO message: " + message
-
-    def on_close(self):
-        print "WebSocket closed"
-        controller.remove_writer(self.writers[self])
-        del self.writers[self]
 
 class Home(tornado.web.RequestHandler):
     def get(self):
@@ -98,11 +80,9 @@ class Home(tornado.web.RequestHandler):
                 patterns.append((disp_root, p))
 
             patterns[:1] = patterns[0][1]    # Don't return relpath for root dir
-
             return patterns
 
         patterns = find_patterns(config['pattern_dir'])
-
 
         patterns_html = show_patterns(patterns)
         self.render("layout.html", title="Bemis100", patterns_html=patterns_html)
@@ -121,9 +101,9 @@ class AddPattern(tornado.web.RequestHandler):
             p = None
             if pattern_name.startswith("Specials"):
                 if "new_wave" in pattern_name:
-                    p = NewWavePattern(num_lights = config['num_lights'])
+                    p = NewWavePattern(num_lights=config['num_lights'])
                 elif "wave" in pattern_name:
-                    p = WavePattern(num_lights = config['num_lights'])
+                    p = WavePattern(num_lights=config['num_lights'])
             else:
                 pattern_path = os.path.join(config['pattern_dir'], pattern_name)
                 if os.path.exists(pattern_path):
@@ -144,21 +124,24 @@ class AddPattern(tornado.web.RequestHandler):
                 print "Added pattern:", pattern_name
             else:
                 print "Invalid pattern name:", pattern_name
-        # controller.play()
         self.write(json.dumps(dict(success=True)))
 
 
 class Queue(tornado.web.RequestHandler):
 
     def get(self):
-        current_pattern = controller.get_current_pattern()
-        if current_pattern is not None:
-            current = [current_pattern['name'],
-                       current_pattern['num_times']]
+        if controller.current is None:
+            self.write(json.dumps(dict(queue=[], current=dict(name='',reps=0,id=-1))))
         else:
-            current = ['', 0]
-        self.write(json.dumps(dict(queue=[(p[0], p[2]) for p in controller.get_queue()],
-                                   current=current)))
+            self.write(json.dumps(dict(
+                       queue=[dict(name=p.name,
+                                   reps=p.reps,
+                                   id=p.id)
+                              for p in controller.queue],
+                       current=dict(name=controller.current.name,
+                                    reps=controller.current.reps,
+                                    id=controller.current.id))))
+
 
 class Status(tornado.web.RequestHandler):
     def get(self):
@@ -183,8 +166,7 @@ class GetWriters(tornado.web.RequestHandler):
     def get(self):
         writer_list = []
         for writer in controller.writers:
-            if not isinstance(writer, WebsocketWriter):
-                writer_list.append('%s on device %s' % (writer.__class__.__name__, writer.device))
+            writer_list.append('%s on device %s' % (writer.__class__.__name__, writer.device))
         self.write(json.dumps(writer_list))
 
 class AddWriter(tornado.web.RequestHandler):
@@ -207,49 +189,27 @@ class DeviceList(tornado.web.RequestHandler):
         print ports
         self.write(json.dumps({'writers':writers, 'ports':ports}))
 
-# class Upload(tornado.web.RequestHandler):
-#     def post(self):
-#         try:
-#             i = web.input(pattern={})
-#             f = i['pattern']
-#             fn = f.filename
-#             if '/' in fn:
-#                 fn = fn[fn.rfind('/')+1:]
-
-#             base_path = config['pattern_dir']
-#             path = os.path.join(base_path, fn)
-
-#             new_f = open(path, 'w')
-#             shutil.copyfileobj(f.file, new_f)
-#             f.file.close()
-#             new_f.close()
-#         except Exception:
-#             raise
-
-#         raise web.Found('/')
-
 if __name__ == '__main__':
     handlers = [(r'/', Home),
-        (r'/play', Play),
-        (r'/add', AddPattern),
-        (r'/queue', Queue),
-        (r'/pause', Pause),
-        (r'/next', Next),
-        (r'/add_writer', AddWriter),
-        (r'/device_list', DeviceList),
-        (r'/get_writers', GetWriters)
-        # (r'/upload', Upload)
-        ] + tornadio2.TornadioRouter(ClientSocket).urls
+                (r'/play', Play),
+                (r'/add', AddPattern),
+                (r'/queue', Queue),
+                (r'/pause', Pause),
+                (r'/next', Next),
+                (r'/add_writer', AddWriter),
+                (r'/device_list', DeviceList),
+                (r'/get_writers', GetWriters)
+                # (r'/upload', Upload)
+                ]
 
-    application = tornado.web.Application(handlers=handlers, static_path='static', socket_io_port=5000)
+    application = tornado.web.Application(handlers=handlers, static_path='static')
 
     try:
-        server = tornadio2.SocketServer(application)
+        # server = tornadio2.SocketServer(application)
+        application.listen(5000)
+        tornado.ioloop.IOLoop.instance().start()
     except KeyboardInterrupt:
         print 'Exiting...'
         controller.quit()
         print 'controller exit'
-        print "active threads", threading._active
         sys.exit()
-
-
