@@ -2,6 +2,7 @@ import tornado.web
 import tornado.ioloop
 import threading
 import os
+import re
 import json
 import platform
 
@@ -58,10 +59,17 @@ def show_patterns(patterns):
             s += show_pattern(e)
     return s
 
+def get_preview_path(pat):
+    return os.path.join(config['build_dir'], 'previews', re.sub(r'\.[^.]*$', '.gif', pat))
+
 def show_pattern(p):
     s = '<a href="/play?pattern='+p+'">\n' + \
-        '\t<img class="pattern-image" data-pattern="'+p+'" alt="pattern" ' + \
+        '\t<div class="pattern-block"> ' + \
+        '\t<img class="pattern-image" data-pattern="'+p+'"' + \
         'src="'+os.path.join(config['pattern_dir'],p)+'">\n' + \
+        '\t<img class="pattern-preview" data-pattern="'+p+'"' + \
+        'src="'+ get_preview_path(p) +'">\n' + \
+        '</div>\n' + \
         '</a>\n'
     return s
 

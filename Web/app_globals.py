@@ -3,6 +3,7 @@ from led.ge import GEWriter
 from led.bemis100 import Bemis100Writer
 
 config = {'pattern_dir': 'static/patterns',
+          'build_dir': 'static/build',
           'framerate': 30,
           'num_lights': 50}
 
