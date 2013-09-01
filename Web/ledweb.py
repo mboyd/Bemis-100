@@ -2,7 +2,6 @@ import tornado.web
 import tornado.ioloop
 import threading
 import os
-import re
 import json
 import platform
 
@@ -15,7 +14,9 @@ from led.graphEq import GraphEqPattern
 from led.wave import WavePattern
 from led.new_wave import NewWavePattern
 from led.ge import GEWriter
+from led.mix import MixPattern
 from led.bemis100 import Bemis100Writer
+from led.utils import find_patterns
 
 if platform.system() == "Windows":
     import _winreg as winreg
@@ -49,7 +50,8 @@ def show_patterns(patterns):
     for e in patterns:
         if type(e) is tuple:
             s += '<div class="pattern_folder">' + \
-                 '<h3>' + e[0] + '</h3>' + \
+                 '<h3>' + e[0] + \
+                 '&rarr;  <span class="shuffle"><a folder="' + e[0] + '" href="/play?folder=' + e[0] + '">Shuffle</a></span></h3>' + \
                  show_patterns(e[1]) + \
                  '</div>'
         else:
@@ -58,30 +60,13 @@ def show_patterns(patterns):
 
 def show_pattern(p):
     s = '<a href="/play?pattern='+p+'">\n' + \
-        '\t<img class="pattern" data-pattern="'+p+'" alt="pattern" ' + \
+        '\t<img class="pattern-image" data-pattern="'+p+'" alt="pattern" ' + \
         'src="'+os.path.join(config['pattern_dir'],p)+'">\n' + \
         '</a>\n'
     return s
 
 class Home(tornado.web.RequestHandler):
     def get(self):
-
-        def find_patterns(d):
-            patterns = []
-
-            for root, dirs, files in os.walk(d):
-                disp_root = os.path.relpath(root, d)
-                if disp_root == '.':
-                    disp_root = ''
-                p = []
-                for f in files:
-                    if re.match('^[^\.]+\.(gif|png|jpg|jpeg|tiff|bmp)$', f, re.I):
-                        p.append(os.path.join(disp_root, f))
-                patterns.append((disp_root, p))
-
-            patterns[:1] = patterns[0][1]    # Don't return relpath for root dir
-            return patterns
-
         patterns = find_patterns(config['pattern_dir'])
 
         patterns_html = show_patterns(patterns)
@@ -90,24 +75,27 @@ class Home(tornado.web.RequestHandler):
 class AddPattern(tornado.web.RequestHandler):
     def get(self):
         params = self.request.arguments
-        print params
         if 'pattern' in params or 'beatpattern' in params \
-                or 'grapheqpattern' in params:
+                or 'grapheqpattern' in params or 'folder' in params:
+            p = None
+            track_beat = 'beat' in params
+            graph_eq = 'grapheq' in params
             if 'pattern' in params:
                 pattern_name = params['pattern'][0]
-                track_beat = 'beat' in params
-                graph_eq = 'grapheq' in params
-
-            p = None
-            if pattern_name.startswith("Specials"):
-                if "new_wave" in pattern_name:
-                    p = NewWavePattern(num_lights=config['num_lights'])
-                elif "wave" in pattern_name:
-                    p = WavePattern(num_lights=config['num_lights'])
-            else:
-                pattern_path = os.path.join(config['pattern_dir'], pattern_name)
-                if os.path.exists(pattern_path):
-                    p = Bemis100Pattern(pattern_path, config['num_lights'])
+                if pattern_name.startswith("Specials"):
+                    if "new_wave" in pattern_name:
+                        p = NewWavePattern(num_lights=config['num_lights'])
+                    elif "wave" in pattern_name:
+                        p = WavePattern(num_lights=config['num_lights'])
+                else:
+                    pattern_path = os.path.join(config['pattern_dir'], pattern_name)
+                    if os.path.exists(pattern_path):
+                        p = Bemis100Pattern(pattern_path, config['num_lights'])
+            elif 'folder' in params:
+                folder = params['folder'][0]
+                pattern_path = os.path.join(config['pattern_dir'], folder)
+                pattern_name = folder
+                p = MixPattern(pattern_path, config['num_lights'])
 
             if p is not None:
                 if track_beat:
@@ -131,16 +119,18 @@ class Queue(tornado.web.RequestHandler):
 
     def get(self):
         if controller.current is None:
-            self.write(json.dumps(dict(queue=[], current=dict(name='',reps=0,id=-1))))
+            self.write(json.dumps(dict(queue=[], current=dict(name='',reps=0,id=-1,is_folder=False))))
         else:
             self.write(json.dumps(dict(
                        queue=[dict(name=p.name,
                                    reps=p.reps,
-                                   id=p.id)
+                                   id=p.id,
+                                   is_folder=isinstance(p.pattern, MixPattern))
                               for p in controller.queue],
                        current=dict(name=controller.current.name,
                                     reps=controller.current.reps,
-                                    id=controller.current.id))))
+                                    id=controller.current.id,
+                                    is_folder=isinstance(controller.current.pattern, MixPattern)))))
 
 
 class Status(tornado.web.RequestHandler):

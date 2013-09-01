@@ -1,6 +1,7 @@
 $(document).ready(function() {
   updateDevices();
   updateWriters();
+  updateQueue();
 
   $('#play_controls a').click(function(evt) {
     evt.preventDefault();
@@ -40,7 +41,7 @@ $(document).ready(function() {
   });
 
 
-  $('#patterns a').click(function(evt) {
+  $('.pattern-image').click(function(evt) {
     evt.preventDefault();
 
     var p = evt.target.getAttribute('data-pattern');
@@ -56,6 +57,23 @@ $(document).ready(function() {
       updateQueue();
     });
   });
+
+  $('.shuffle a').click(function(evt) {
+    evt.preventDefault();
+    var p = evt.target.getAttribute('folder');
+
+    var track_beat = $('#pattern_config input[name=beat_tracking]').is(':checked');
+
+    params = {folder: p};
+    if (track_beat) {
+      params.beat = true;
+    }
+
+    $.getJSON('/add', params, function(result) {
+      updateQueue();
+    });
+  });
+
 
 });
 
@@ -91,6 +109,18 @@ function updateWriters() {
   });
 }
 
+function patternHTML(pat) {
+    n = pat.reps;
+    p = pat.name;
+    if (!pat.is_folder) {
+      qh = '<li><img src="/static/patterns/' + p + '">' + '</li>';
+    } else {
+      qh = '<li><div class="mix-queue-item"><span>Shuffle: ' + p + '</span></div></li>';
+    }
+    return qh;
+  }
+
+
 function updateQueue() {
   $.getJSON('/queue', function(result) {
     var queue = result['queue'];
@@ -103,19 +133,14 @@ function updateQueue() {
     }
 
     for (var i = 0; i < queue.length; i++) {
-      p = queue[i].name;
-      n = queue[i].reps;
-      qh +=
-        '<li><img src="/static/patterns/' + p + '">' +
-
-        '</li>';
+      qh += patternHTML(queue[i]);
     }
     $('#queue ul').html(qh);
     var current = result['current'];
-    p = current.name;
     n = current.reps;
     if (n !== 0) {
-      $('#current ul').html('<li><img src="/static/patterns/' + p + '">' + '</li>');
+      ch = patternHTML(current);
+      $('#current ul').html(ch);
     }
   setTimeout(updateQueue, 2000);
   });

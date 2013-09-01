@@ -15,8 +15,8 @@ DEFAULT_NUM_BOARDS = 83
 
 # The gradient is intended to be a 1-D bytearray of values in RGB order. Low
 # amplitudes will correspond to the RGB values in the beginning of the byte
-# array, and high amplitudes to the values at the end. 
-gradient = pattern.Bemis100Pattern('../Patterns/rainbow166x1.gif', 
+# array, and high amplitudes to the values at the end.
+gradient = pattern.Bemis100Pattern('../Patterns/rainbow166x1.gif',
         GRADIENT_LEVELS/2).__iter__().next()
 
 
@@ -27,7 +27,7 @@ gradient = pattern.Bemis100Pattern('../Patterns/rainbow166x1.gif',
 # step through self.out (length num_boards*6)
 # each RGB block equals the values from gradient indexed by the normalized coeff
 # corresponding to that pixel
-# 
+#
 
 class GraphEqPattern:
     def __init__(self, gradient = gradient, num_boards = DEFAULT_NUM_BOARDS,
@@ -71,4 +71,4 @@ class GraphEqPattern:
         return iter(self.get_line,None)
 
 
-    
+
