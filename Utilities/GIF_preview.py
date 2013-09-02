@@ -17,7 +17,7 @@ def makePreview(inFile,outFile=None):
     for i in range(min(height,150)):
         out = im.crop([0,i,width,i+1])
         out.resize((150,1),Image.ANTIALIAS).save(os.path.join(tempFolder,format(i,'05d')+'.gif'))
-    command ='convert '+'-delay 5 -loop 100 '+os.path.join(tempFolder,'*.gif')+' ' + outFile
+    command ='convert '+'-delay 5 -loop 0 '+os.path.join(tempFolder,'*.gif')+' ' + outFile
     print(command)
     os.system(command)
     os.system('rm -r '+tempFolder)

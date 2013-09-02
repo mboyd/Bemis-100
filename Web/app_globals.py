@@ -2,7 +2,7 @@ from led.ledctl import LEDController
 from led.ge import GEWriter
 from led.bemis100 import Bemis100Writer
 
-config = {'pattern_dir': 'static/patterns',
+config = {'pattern_dir': 'static/build/thumbs',
           'build_dir': 'static/build',
           'framerate': 30,
           'num_lights': 50}
